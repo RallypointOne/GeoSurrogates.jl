@@ -66,7 +66,7 @@ Statistics = "1.11.1"
 StatsAPI = "1.8.0"
 StatsBase = "0.34.9"
 StatsModels = "0.7.7"
-StyledStrings = "1.11.0"
+StyledStrings = "1.11.0, 1"
 Tables = "1.12.1"
 julia = "1.6.7"
 
