@@ -41,6 +41,15 @@ end
     for col in names(df2)
         @test GeoSurrogates.is_normalized(df2[!, col])
     end
+
+    # Test normalize(::Raster)
+    r_norm = GeoSurrogates.normalize(elev)
+    @test GeoSurrogates.is_normalized(r_norm.data)
+    for dim in r_norm.dims
+        if !DimensionalData.Lookups.iscategorical(dim)
+            @test GeoSurrogates.is_normalized(dim.val.data)
+        end
+    end
 end
 
 #-----------------------------------------------------------------------------# RasterWrap
@@ -53,11 +62,30 @@ end
     end
 end
 
+#-----------------------------------------------------------------------------# CategoricalRasterWrap
+@testset "CategoricalRasterWrap" begin
+    crw = GeoSurrogates.CategoricalRasterWrap(veg)
+    @test GI.crs(crw) == GI.crs(veg)
+    @test GI.extent(crw) == GI.extent(veg)
+
+    # Test that all unique levels are represented
+    unique_levels = unique(skipmissing(veg.data))
+    @test length(crw.dict) == length(unique_levels)
+
+    for (k, v) in crw.dict
+        for pt in v
+            x, y = X(At(pt[1])), Y(At(pt[2]))
+            val = veg[x, y]
+            @test val == k
+        end
+    end
+end
+
 #-----------------------------------------------------------------------------# GeomWrap
 @testset "GeomWrap" begin
     gw = GeoSurrogates.GeomWrap(GI.Point(0.0, 0.0))
-    @test gw(0, 0) == 1.0
-    @test gw(1, 0) ≈ GeoSurrogates.gaussian(1.0, 4)
+    @test predict(gw, (0, 0)) == 1.0
+    @test predict(gw, (1, 0)) ≈ GeoSurrogates.gaussian(1.0, 4)
 end
 
 

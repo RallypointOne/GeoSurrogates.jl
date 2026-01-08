@@ -9,7 +9,7 @@ using GeoSurrogates, Rasters
 
 r = Raster(...)
 
-f = GeoSurrogates.RasterSurrogate(r)
+rw = GeoSurrogates.RasterWrap(r)
 
-f(x, y)
+predict(rw, x, y)  # Linear Interpolation
 ```

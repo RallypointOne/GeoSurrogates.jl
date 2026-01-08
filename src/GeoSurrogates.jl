@@ -9,19 +9,28 @@ import DimensionalData as DD
 
 import StatsAPI: predict, fit!
 
-export ImplicitTerrain
+export ImplicitTerrain, predict, fit!
 
 
 #-----------------------------------------------------------------------------# normalize
 # *normalize* in this package means scaling to [-1, 1]
-normalize(x::AbstractArray{<:Number}, a = minimum(x), b = maximum(x)) = 2 * (x .- a) ./ (b - a) .- 1
+function normalize(x::AbstractArray{<:Union{Missing, Number}})
+    vals = skipmissing(x)
+    isempty(vals) && return x
+    a, b = extrema(vals)
+    return 2 * (x .- a) ./ (b - a) .- 1
+end
 
 # Fallback does nothing (e.g. for strings)
 normalize(x) = x
 
-normalize(dim::DD.Dimension) = DD.Lookups.iscategorical(dim) ? dim : X(normalize(dim.val.data))
+normalize(dim::DD.Dimension) = DD.Lookups.iscategorical(dim) ? dim : DD.rebuild(dim, normalize(dim.val.data))
 
-normalize(r::Raster) = modify(normalize, r)
+function normalize(r::Raster)
+    normalized_dims = map(normalize, DD.dims(r))
+    normalized_data = normalize(r.data)
+    return Raster(normalized_data; dims=normalized_dims)
+end
 
 normalize(nt::NamedTuple) = map(normalize, nt)
 
@@ -47,38 +56,40 @@ predict(model::GeoSurrogate, x::Tuple) = error("predict not implemented for $(ty
 predict(model::GeoSurrogate, x::Raster) = error("predict not implemented for $(typeof(model)) with input type Raster")
 
 
-# #-----------------------------------------------------------------------------# LinReg
-# struct LinReg{F <: FormulaTerm, T <: Number} <: GeoSurrogate
-#     formula::F
-#     β::Vector{T}
-# end
+#-----------------------------------------------------------------------------# LinReg
+struct LinReg{F <: FormulaTerm, T <: Number} <: GeoSurrogate
+    formula::F
+    β::Vector{T}
+end
+Base.show(io::IO, o::LinReg) = print(io, "LinReg: ", o.formula)
 
-# function LinReg(r::Raster)
-#     nt = merge(features(r), (; data = data(r)))
-#     formula = fullfactorialformula(r)
-#     f = apply_schema(formula, schema(formula, nt))
-#     y, x = modelcols(f, nt)
-#     β = x \ y
-#     LinReg(f, β)
-# end
+function LinReg(r::Raster, formula = @formula(layer1 ~ 1 + X * Y ))
+    df = dropmissing!(DataFrame(r))
+    f = apply_schema(formula, schema(formula, df))
+    y, x = modelcols(f, df)
+    β = x \ y
+    return LinReg(f, β)
+end
 
-# function (o::LinReg)(r::Raster)
-#     X = modelmatrix(o.formula, features(r))
-#     ẑ = X * o.β
-#     Raster(reshape(ẑ, size(r)), dims=DD.dims(r))
-# end
+function predict(o::LinReg, coords::Tuple)
+    nt = (X = coords[1], Y = coords[2])
+    only(modelmatrix(o.formula, Tables.rowtable((nt, ))) * o.β)
+end
 
-# function (o::LinReg)(x)
-#     if Tables.istable(x)
-#         X = modelmatrix(o.formula, x)
-#         return X * o.β
-#     else  # assume single row
-#         only(o(Tables.rowtable((x, ))))
-#     end
-# end
+function predict(o::LinReg, r::Raster)
+    df = DataFrame(r)
+    X = modelmatrix(o.formula, df)
+    ẑ = X * o.β
+    Raster(reshape(ẑ, size(r)), dims=DD.dims(r))
+end
 
 
 #-----------------------------------------------------------------------------# RasterWrap
+"""
+    RasterWrap(r::Raster; int = BSpline(Linear()), ext = nothing)
+
+A GeoSurrogate with interpolation (and optional extrapolation).
+"""
 struct RasterWrap{R <: Raster, A, E, F} <: GeoSurrogate
     raster::R
     interpolations_alg::A
@@ -108,20 +119,67 @@ function forwardorder(r::Raster)
     return r
 end
 
+#-----------------------------------------------------------------------------# CategoricalRasterWrap
+"""
+    CategoricalRasterWrap(r::Raster; kernel)
+
+A GeoSurrogate for categorical rasters using kernel smoothing.  Here, "categorical raster" refers
+to a raster where its numerical data is associated with discrete categories (e.g. land cover types).
+"""
+struct CategoricalRasterWrap{R, T, MP, K} <: GeoSurrogate
+    raster::R
+    dict::Dict{T, MP}  # Dict{eltype(raster), Vector{Tuple{Float64, Float64}}}
+    kernel::K
+end
+function CategoricalRasterWrap(r::Raster; kernel = Base.Fix2(gaussian, 4))
+    df = DataFrame(r)
+    gdf = groupby(df, :layer1)
+    dict = Dict(
+        k.layer1 => [(row.X, row.Y) for row in eachrow(group)]
+        for (k, group) in pairs(gdf)
+    )
+    CategoricalRasterWrap(r, dict, kernel)
+end
+
+GI.crs(o::CategoricalRasterWrap) = GI.crs(o.raster)
+GI.extent(o::CategoricalRasterWrap) = GI.extent(o.raster)
+
+function predict(crw::CategoricalRasterWrap, coords::Tuple)
+    out = Dict(k => predict(GeomWrap(GI.MultiPoint(points)), coords) for (k, points) in crw.dict)
+    sumvals = sum(values(out))
+    sumvals == 0 ? out : Dict(k => v / sumvals for (k, v) in out)
+end
+
+function predict(crw::CategoricalRasterWrap, r::Raster)
+    ẑ = [predict(crw, pt) for pt in DimPoints(r)]
+    return Raster(reshape(ẑ, size(r)), dims=DD.dims(r))
+end
 
 #-----------------------------------------------------------------------------# GeomWrap
+"""
+    GeomWrap(geometry; kernel)
+
+A GeoSurrogate representing a geometry.  Coordinates contained in the geometry will result in
+`predict(::GeomWrap, coords)) == 1.0`.  Coordinates "far" will be `0.0`.  "Near" coordinates are
+determined by the `kernel` function evaluated at the distance between the coordinate and the geometry.
+"""
 struct GeomWrap{G, K} <: GeoSurrogate
     geometry::G
     kernel::K
-    GeomWrap(geom::G, kern::K = Base.Fix2(gaussian, 4)) where {G, K} = new{G,K}(geom,kern)
+    GeomWrap(geom::G; kernel::K = Base.Fix2(gaussian, 4)) where {G, K} = new{G,K}(geom, kernel)
 end
-
-(o::GeomWrap)(x...) = o.kernel(GO.distance(x, o.geometry))
 
 gaussian(u, k) = exp(-0.5 * (k * u) ^ 2)
 
 GI.crs(o::GeomWrap) = GI.crs(o.geometry)
 GI.extent(o::GeomWrap) = GI.extent(o.geometry)
+
+predict(o::GeomWrap, coords::Tuple) = o.kernel(GO.distance(GI.Point(coords), o.geometry))
+
+function predict(o::GeomWrap, r::Raster)
+    ẑ = [predict(o, pt) for pt in DimPoints(r)]
+    return Raster(reshape(ẑ, size(r)), dims=DD.dims(r))
+end
 
 #-----------------------------------------------------------------------------# ImplicitTerrain
 include("ImplicitTerrain.jl")
