@@ -68,7 +68,7 @@ end
 
 #-----------------------------------------------------------------------------# fit!
 function fit!(o::MLP, x::AbstractMatrix, y::AbstractVector; steps = 1)
-    @showprogress for _ in 1:steps
+    for _ in 1:steps
         Lux.Training.single_train_step!(AutoZygote(), Lux.MSELoss(), (x, y'), o.train_state)
     end
     return o
