@@ -1,0 +1,198 @@
+using GeoSurrogates, Rasters, ArchGDAL, GeoJSON, Dates, Extents, GLMakie, Statistics, Zygote, DataFrames
+using Dates: DateTime, Hour
+using Rasters: Band
+
+import RapidRefreshData as RR
+import GeoInterface as GI
+import GeoFormatTypes as GFT
+
+#-----------------------------------------------------------------------------# Marshall fire
+marshall = GeoJSON.read(joinpath(@__DIR__, "marshall.geojson"))
+marshall_dates = (Date(2021, 12, 30), Date(2022, 1, 1))
+marshall_ext = Extents.grow(GI.extent(marshall), 5.0)
+
+#-----------------------------------------------------------------------------# HRRR wind data (3 days)
+dset = RR.HRRRDataset(date=marshall_dates[1], cycle="00")
+
+all_bands = RR.bands(dset)
+u_band = only(filter(b -> b.variable == "UGRD" && b.level == "10 m above ground", all_bands))
+v_band = only(filter(b -> b.variable == "VGRD" && b.level == "10 m above ground", all_bands))
+
+function get_datetime(dset)
+    DateTime(dset.date) + Hour(parse(Int, dset.cycle))
+end
+
+function get_uv_rasters(dset, u_band, v_band, extent)
+    u = Raster(get(dset, [u_band]); checkmem=false)
+    v = Raster(get(dset, [v_band]); checkmem=false)
+    u = crop(resample(u, crs=GFT.EPSG("EPSG:4326")), to=extent)
+    v = crop(resample(v, crs=GFT.EPSG("EPSG:4326")), to=extent)
+    # Drop any remaining Band dimension to ensure consistent 2D rasters
+    hasdim(u, Band) && (u = u[Band=1])
+    hasdim(v, Band) && (v = v[Band=1])
+    return u, v
+end
+
+# Collect rasters and timestamps
+timestamps = DateTime[get_datetime(dset)]
+u_rasters = Raster[]
+v_rasters = Raster[]
+
+u_first, v_first = get_uv_rasters(dset, u_band, v_band, marshall_ext)
+push!(u_rasters, u_first)
+push!(v_rasters, v_first)
+
+while dset.date <= marshall_dates[2]
+    global dset = RR.nextcycle(dset)
+    @info "Retrieving HRRR data for $(dset.date) $(dset.cycle)..."
+    push!(timestamps, get_datetime(dset))
+    u_t, v_t = get_uv_rasters(dset, u_band, v_band, marshall_ext)
+    push!(u_rasters, u_t)
+    push!(v_rasters, v_t)
+end
+
+# Create RasterStack with Ti dimension by stacking along new Ti dimension
+u_data = cat([r.data for r in u_rasters]..., dims=3)
+v_data = cat([r.data for r in v_rasters]..., dims=3)
+
+# Use dimensions from first raster, add Ti dimension
+u_series = Raster(u_data, (dims(u_rasters[1])..., Ti(timestamps)))
+v_series = Raster(v_data, (dims(v_rasters[1])..., Ti(timestamps)))
+stack = RasterStack((UGRD=u_series, VGRD=v_series))
+
+@info "Created stack with $(length(timestamps)) timesteps"
+
+#-----------------------------------------------------------------------------# Fit WindSIREN
+@info "Preparing wind data for training..."
+
+# Get u and v components from the first timestep
+u_raw = stack[:UGRD][Ti=1]
+v_raw = stack[:VGRD][Ti=1]
+
+# Plot initial wind field as arrows
+@info "Plotting initial wind field..."
+fig_init = Figure(size=(800, 600))
+
+# Calculate wind speed for coloring
+wind_speed = sqrt.(u_raw.^2 .+ v_raw.^2)
+
+ax_init = Axis(fig_init[1, 1], title="Wind Field (10m above ground)", xlabel="Longitude", ylabel="Latitude", aspect=DataAspect())
+
+# Show wind speed as background heatmap
+hm = heatmap!(ax_init, wind_speed, colormap=:viridis)
+Colorbar(fig_init[1, 2], hm, label="Wind Speed (m/s)")
+
+# Subsample for arrow plot
+df_init = DataFrame(u_raw)
+xs_init = unique(df_init.X)
+ys_init = unique(df_init.Y)
+step_x_init = max(1, length(xs_init) ÷ 15)
+step_y_init = max(1, length(ys_init) ÷ 15)
+xs_sub_init = xs_init[1:step_x_init:end]
+ys_sub_init = ys_init[1:step_y_init:end]
+
+pts_init = [(x, y) for x in xs_sub_init, y in ys_sub_init]
+coords_x_init = [p[1] for p in pts_init]
+coords_y_init = [p[2] for p in pts_init]
+u_init_vec = [u_raw[X=Near(x), Y=Near(y)] for (x, y) in pts_init]
+v_init_vec = [v_raw[X=Near(x), Y=Near(y)] for (x, y) in pts_init]
+
+arrows2d!(ax_init, vec(coords_x_init), vec(coords_y_init), vec(u_init_vec), vec(v_init_vec),
+          lengthscale=0.003, color=:white)
+
+display(fig_init)
+
+@info "Raw data ranges:" u_range=extrema(skipmissing(u_raw)) v_range=extrema(skipmissing(v_raw))
+
+# Normalize rasters to [-1, 1] for SIREN training
+u_norm = GeoSurrogates.normalize(u_raw)
+v_norm = GeoSurrogates.normalize(v_raw)
+
+@info "Normalized data ranges:" u_range=extrema(skipmissing(u_norm)) v_range=extrema(skipmissing(v_norm))
+
+# Create and train WindSIREN model
+@info "Creating WindSIREN model..."
+model = GeoSurrogates.WindSurrogate.WindSIREN(
+    hidden = 256,
+    n_hidden = 3,
+    ω0 = 30f0,
+)
+
+n_steps = 2000
+@info "Training WindSIREN for $n_steps steps..."
+@time fit!(model, u_norm, v_norm; steps=n_steps)
+
+@info "Training complete!"
+
+#-----------------------------------------------------------------------------# Predictions
+@info "Generating predictions..."
+u_pred, v_pred = predict(model, u_norm)
+
+# Calculate errors
+u_error = u_norm .- u_pred
+v_error = v_norm .- v_pred
+
+@info "Prediction errors:" u_mae=mean(abs.(skipmissing(u_error))) v_mae=mean(abs.(skipmissing(v_error)))
+
+#-----------------------------------------------------------------------------# Visualization
+@info "Creating visualization..."
+
+fig = Figure(size=(1200, 800))
+
+# Original u component
+ax1 = Axis(fig[1, 1], title="U (original)", aspect=DataAspect())
+hm1 = heatmap!(ax1, u_norm)
+Colorbar(fig[1, 2], hm1)
+
+# Predicted u component
+ax2 = Axis(fig[1, 3], title="U (predicted)", aspect=DataAspect())
+hm2 = heatmap!(ax2, u_pred)
+Colorbar(fig[1, 4], hm2)
+
+# Original v component
+ax3 = Axis(fig[2, 1], title="V (original)", aspect=DataAspect())
+hm3 = heatmap!(ax3, v_norm)
+Colorbar(fig[2, 2], hm3)
+
+# Predicted v component
+ax4 = Axis(fig[2, 3], title="V (predicted)", aspect=DataAspect())
+hm4 = heatmap!(ax4, v_pred)
+Colorbar(fig[2, 4], hm4)
+
+# Wind vector field comparison (subsampled for visibility)
+ax5 = Axis(fig[3, 1:2], title="Wind vectors (original)", aspect=DataAspect())
+ax6 = Axis(fig[3, 3:4], title="Wind vectors (predicted)", aspect=DataAspect())
+
+# Get coordinates for quiver plot
+df = DataFrame(u_norm)
+xs = unique(df.X)
+ys = unique(df.Y)
+
+# Subsample for cleaner quiver plot
+step_x = max(1, length(xs) ÷ 20)
+step_y = max(1, length(ys) ÷ 20)
+
+xs_sub = xs[1:step_x:end]
+ys_sub = ys[1:step_y:end]
+
+# Create meshgrid points
+pts = [(x, y) for x in xs_sub, y in ys_sub]
+coords_x = [p[1] for p in pts]
+coords_y = [p[2] for p in pts]
+
+# Get wind vectors at subsampled points
+u_orig_vec = [u_norm[X=Near(x), Y=Near(y)] for (x, y) in pts]
+v_orig_vec = [v_norm[X=Near(x), Y=Near(y)] for (x, y) in pts]
+u_pred_vec = [u_pred[X=Near(x), Y=Near(y)] for (x, y) in pts]
+v_pred_vec = [v_pred[X=Near(x), Y=Near(y)] for (x, y) in pts]
+
+# Plot quiver
+arrows2d!(ax5, vec(coords_x), vec(coords_y), vec(u_orig_vec), vec(v_orig_vec),
+          lengthscale=0.02)
+arrows2d!(ax6, vec(coords_x), vec(coords_y), vec(u_pred_vec), vec(v_pred_vec),
+          lengthscale=0.02)
+
+@info "Displaying figure..."
+display(fig)
+
+@info "Done! WindSIREN example complete."

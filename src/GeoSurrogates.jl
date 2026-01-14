@@ -9,7 +9,7 @@ import DimensionalData as DD
 
 import StatsAPI: predict, fit!
 
-export ImplicitTerrain, predict, fit!
+export ImplicitTerrain, WindSurrogate, predict, fit!
 
 
 #-----------------------------------------------------------------------------# normalize
@@ -18,6 +18,7 @@ function normalize(x::AbstractArray{<:Union{Missing, Number}})
     vals = skipmissing(x)
     isempty(vals) && return x
     a, b = extrema(vals)
+    a == b && return zero(x)  # All values equal → map to 0 (midpoint of [-1, 1])
     return 2 * (x .- a) ./ (b - a) .- 1
 end
 
@@ -34,7 +35,7 @@ end
 
 normalize(nt::NamedTuple) = map(normalize, nt)
 
-is_normalized(x) = all(-1 .≤ x .≤ 1)
+is_normalized(x) = all(v -> -1 ≤ v ≤ 1, skipmissing(x))
 
 function normalize!(df::DataFrame)
     for col in names(df)
@@ -183,5 +184,7 @@ end
 
 #-----------------------------------------------------------------------------# ImplicitTerrain
 include("ImplicitTerrain.jl")
+
+include("WindSurrogate.jl")
 
 end

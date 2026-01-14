@@ -144,7 +144,7 @@ LocalResource(make_anim(m.surface, pyr[2], "Surface - Level 2"))
 # ╟─1ef9cdae-0cd9-4bfb-ba58-4e5b0fc31301
 # ╟─4c155c6c-f58c-4bf8-a755-ece43b13b58b
 # ╟─ddb9908a-21d0-4d45-ad69-06fcab057c18
-# ╟─db0f2f67-6c86-4440-a00a-7f909bf33d00
-# ╟─58906e6a-1218-469d-b60a-6099e3cc5f91
-# ╟─a2584656-ad34-4db8-833c-ec7346fc6fda
+# ╠═db0f2f67-6c86-4440-a00a-7f909bf33d00
+# ╠═58906e6a-1218-469d-b60a-6099e3cc5f91
+# ╠═a2584656-ad34-4db8-833c-ec7346fc6fda
 # ╠═a0f19d55-a0a1-403c-929f-bd13f89be75d

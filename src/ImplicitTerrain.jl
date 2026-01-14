@@ -115,11 +115,15 @@ end
 # Assumes input raster is normalized
 function _gaussian_pyramid(r::Raster, σ = 4, n = 4, downsample = 2)
     rnorm = normalize(r)
+    # Preserve dimension ordering (increasing vs decreasing)
+    x_order = step(DD.dims(r, X).val.data) > 0 ? (-1f0, 1f0) : (1f0, -1f0)
+    y_order = step(DD.dims(r, Y).val.data) > 0 ? (-1f0, 1f0) : (1f0, -1f0)
     dims = map(DD.dims(r)) do d
         if DD.Lookups.iscategorical(d)
             return d
         else
-            x = range(-1f0, 1f0, length=length(d))
+            order = d isa DD.Dimensions.X ? x_order : y_order
+            x = range(order[1], order[2], length=length(d))
             return DD.rebuild(d, x)
         end
     end
@@ -129,9 +133,9 @@ function _gaussian_pyramid(r::Raster, σ = 4, n = 4, downsample = 2)
         prev = pyramid[end]
         filtered = Float32.(imfilter(prev, Kernel.gaussian(σ)))
         resampled = resample(filtered, method = :average, size = size(prev) .÷ downsample)
-        # Put back into Float32:
-        x = range(-1f0, 1f0, length=size(resampled, 1))
-        y = range(-1f0, 1f0, length=size(resampled, 2))
+        # Put back into Float32, preserving dimension order:
+        x = range(x_order[1], x_order[2], length=size(resampled, 1))
+        y = range(y_order[1], y_order[2], length=size(resampled, 2))
         dims = (X(x), Y(y))
         next = Raster(Float32.(resampled.data), dims)
         push!(pyramid, next)
