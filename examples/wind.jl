@@ -1,6 +1,8 @@
-using GeoSurrogates, Rasters, ArchGDAL, GeoJSON, Dates, Extents, GLMakie, Statistics, Zygote, DataFrames
+using GeoSurrogates, Rasters, ArchGDAL, GeoJSON, Dates, Extents, GLMakie, Statistics, Zygote, DataFrames, Tyler
 using Dates: DateTime, Hour
 using Rasters: Band
+
+Rasters.checkmem!(false)
 
 import RapidRefreshData as RR
 import GeoInterface as GI
@@ -100,6 +102,7 @@ v_init_vec = [v_raw[X=Near(x), Y=Near(y)] for (x, y) in pts_init]
 arrows2d!(ax_init, vec(coords_x_init), vec(coords_y_init), vec(u_init_vec), vec(v_init_vec),
           lengthscale=0.003, color=:white)
 
+save(joinpath(@__DIR__, "wind_original.png"), fig_init)
 display(fig_init)
 
 @info "Raw data ranges:" u_range=extrema(skipmissing(u_raw)) v_range=extrema(skipmissing(v_raw))
@@ -188,11 +191,42 @@ v_pred_vec = [v_pred[X=Near(x), Y=Near(y)] for (x, y) in pts]
 
 # Plot quiver
 arrows2d!(ax5, vec(coords_x), vec(coords_y), vec(u_orig_vec), vec(v_orig_vec),
-          lengthscale=0.02)
+          lengthscale=0.04)
 arrows2d!(ax6, vec(coords_x), vec(coords_y), vec(u_pred_vec), vec(v_pred_vec),
-          lengthscale=0.02)
+          lengthscale=0.04)
 
+save(joinpath(@__DIR__, "wind_comparison.png"), fig)
 @info "Displaying figure..."
 display(fig)
+
+#-----------------------------------------------------------------------------# Wind arrows on map
+@info "Creating wind arrows on map..."
+
+# Get extent for map bounds
+ext = GI.extent(u_raw)
+west, east = ext.X
+south, north = ext.Y
+
+# Create Tyler map (it creates its own figure)
+map_extent = Extent(X=(west, east), Y=(south, north))
+m = Tyler.Map(map_extent; size=(1000, 800), crs=Tyler.wgs84)
+
+# Wait for tiles to load
+wait(m)
+
+# Overlay Marshall fire perimeter
+poly_coords = GI.coordinates(GI.getgeom(marshall, 1))
+for ring in poly_coords
+    xs = [p[1] for p in ring]
+    ys = [p[2] for p in ring]
+    lines!(m.axis, xs, ys, color=:red, linewidth=3)
+end
+
+# Overlay wind arrows (using same subsampled points)
+arrows!(m.axis, vec(coords_x_init), vec(coords_y_init), vec(u_init_vec), vec(v_init_vec),
+        lengthscale=0.005, color=:orange, linewidth=2, arrowsize=12)
+
+save(joinpath(@__DIR__, "wind_map.png"), m.figure)
+display(m.figure)
 
 @info "Done! WindSIREN example complete."

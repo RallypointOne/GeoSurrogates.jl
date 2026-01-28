@@ -35,6 +35,7 @@ ax_orig = Axis(fig_orig[1, 1], title="Original Vegetation Categories (FBFM13)", 
 hm_orig = heatmap!(ax_orig, r, colormap=:tab10)
 Colorbar(fig_orig[1, 2], hm_orig, label="Category")
 
+save(joinpath(@__DIR__, "vegetation_original.png"), fig_orig)
 display(fig_orig)
 
 #-----------------------------------------------------------------------------# Create CategoricalRasterWrap
@@ -92,6 +93,7 @@ ax3 = Axis(fig[1, 5], title="Prediction Entropy (Uncertainty)", xlabel="X", ylab
 hm3 = heatmap!(ax3, entropy_raster, colormap=:viridis)
 Colorbar(fig[1, 6], hm3, label="Entropy (bits)")
 
+save(joinpath(@__DIR__, "vegetation_comparison.png"), fig)
 display(fig)
 
 #-----------------------------------------------------------------------------# Probability maps for each category
@@ -112,6 +114,7 @@ end
 
 Colorbar(fig_probs[:, 4], limits=(0, 1), colormap=:blues, label="Probability")
 
+save(joinpath(@__DIR__, "vegetation_probability_maps.png"), fig_probs)
 display(fig_probs)
 
 @info "Done! CategoricalRasterWrap example complete."

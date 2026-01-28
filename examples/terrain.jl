@@ -34,6 +34,7 @@ ax_init = Axis(fig_init[1, 1], title="Original Terrain (Elevation)", xlabel="X",
 hm_init = heatmap!(ax_init, r, colormap=:terrain)
 Colorbar(fig_init[1, 2], hm_init, label="Elevation")
 
+save(joinpath(@__DIR__, "terrain_original.png"), fig_init)
 display(fig_init)
 
 #-----------------------------------------------------------------------------# Normalize and prepare data
@@ -47,7 +48,7 @@ r_norm = GeoSurrogates.normalize(r)
 model = GeoSurrogates.ImplicitTerrain.Model()
 
 # Note: Paper uses 3000 steps per pyramid level; reduced here for speed
-n_steps = 200
+n_steps = 3000
 @info "Training ImplicitTerrain model ($n_steps steps per pyramid level)..."
 @time fit!(model, r_norm; steps=n_steps)
 
@@ -84,6 +85,7 @@ ax3 = Axis(fig[1, 5], title="Error (Original - Predicted)", xlabel="X", ylabel="
 hm3 = heatmap!(ax3, z_error, colormap=:RdBu)
 Colorbar(fig[1, 6], hm3)
 
+save(joinpath(@__DIR__, "terrain_comparison.png"), fig)
 @info "Displaying figure..."
 display(fig)
 
@@ -103,6 +105,7 @@ lines!(ax_cross, x_coords, z_orig_slice, label="Original", linewidth=2)
 lines!(ax_cross, x_coords, z_pred_slice, label="Predicted", linewidth=2, linestyle=:dash)
 axislegend(ax_cross, position=:rt)
 
+save(joinpath(@__DIR__, "terrain_cross_section.png"), fig_cross)
 display(fig_cross)
 
 @info "Done! ImplicitTerrain example complete."
