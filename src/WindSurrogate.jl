@@ -142,12 +142,16 @@ end
 Train the model on coordinate-value pairs.
 - `x`: 2×N matrix of normalized (x, y) coordinates
 - `y`: 2×N matrix of (u, v) wind components
+
+Returns a vector of loss values (one per step).
 """
 function fit!(o::WindSIREN, x::AbstractMatrix, y::AbstractMatrix; steps = 1)
+    losses = Float32[]
     for _ in 1:steps
-        Lux.Training.single_train_step!(AutoZygote(), Lux.MSELoss(), (x, y), o.train_state)
+        _, loss, _, _ = Lux.Training.single_train_step!(AutoZygote(), Lux.MSELoss(), (x, y), o.train_state)
+        push!(losses, loss)
     end
-    return o
+    return losses
 end
 
 """
@@ -155,6 +159,8 @@ end
 
 Train the model on u and v wind component rasters.
 Rasters must be normalized before fitting.
+
+Returns a vector of loss values (one per step).
 """
 function fit!(o::WindSIREN, u::Raster, v::Raster; steps = 1)
     is_normalized(u) || error("U raster must be normalized (see GeoSurrogates.normalize) before fitting.")
@@ -163,18 +169,20 @@ function fit!(o::WindSIREN, u::Raster, v::Raster; steps = 1)
 
     x = features(u)  # Use u raster for coordinates (both should have same grid)
     y = Float32[vec(u.data)'; vec(v.data)']
-    return fit!(o, x, y; steps=steps)
+    fit!(o, x, y; steps=steps)
 end
 
 """
     fit!(model::WindSIREN, uv::RasterStack; steps=1)
 
 Train the model on a RasterStack containing :u and :v layers.
+
+Returns a vector of loss values (one per step).
 """
 function fit!(o::WindSIREN, uv::DD.AbstractDimStack; steps = 1)
     haskey(uv, :u) || error("RasterStack must have a :u layer")
     haskey(uv, :v) || error("RasterStack must have a :v layer")
-    return fit!(o, uv[:u], uv[:v]; steps=steps)
+    fit!(o, uv[:u], uv[:v]; steps=steps)
 end
 
 

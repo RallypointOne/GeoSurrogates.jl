@@ -1,4 +1,4 @@
-using GeoSurrogates, Rasters, ArchGDAL, GLMakie, Statistics, Zygote, DataFrames
+using GeoSurrogates, Rasters, ArchGDAL, GLMakie, Statistics, Zygote, DataFrames, Optimisers
 using p7zip_jll: p7zip
 using Rasters: Band
 
@@ -45,12 +45,19 @@ r_norm = GeoSurrogates.normalize(r)
 
 #-----------------------------------------------------------------------------# Create and train ImplicitTerrain model
 @info "Creating ImplicitTerrain.Model (surface + geometry MLPs)..."
-model = GeoSurrogates.ImplicitTerrain.Model()
+# Higher ω0 = more high-frequency detail (less smooth). Default is 30.
+ω0 = 50f0
+lr = 0.001f0  # Learning rate (default is 0.0001)
+model = GeoSurrogates.ImplicitTerrain.Model(
+    GeoSurrogates.ImplicitTerrain.MLP(ω0=ω0, alg=Optimisers.Adam(lr)),
+    GeoSurrogates.ImplicitTerrain.MLP(ω0=ω0, alg=Optimisers.Adam(lr))
+)
 
 # Note: Paper uses 3000 steps per pyramid level; reduced here for speed
-n_steps = 3000
-@info "Training ImplicitTerrain model ($n_steps steps per pyramid level)..."
-@time fit!(model, r_norm; steps=n_steps)
+n_steps = 2500
+batchsize = 4096  # Use mini-batching for memory efficiency
+@info "Training ImplicitTerrain model ($n_steps steps per pyramid level, batchsize=$batchsize)..."
+@time fit!(model, r_norm; steps=n_steps, batchsize)
 
 @info "Training complete!"
 
@@ -58,10 +65,11 @@ n_steps = 3000
 @info "Generating predictions..."
 z_pred = predict(model, r_norm)
 
-# Calculate errors
+# Calculate errors (use .data directly since normalized rasters have no missing values)
 z_error = r_norm .- z_pred
-mae = mean(abs.(skipmissing(z_error)))
-rmse = sqrt(mean(skipmissing(z_error).^2))
+error_data = z_error.data
+mae = mean(abs, error_data)
+rmse = sqrt(mean(x -> x^2, error_data))
 
 @info "Prediction errors:" mae=mae rmse=rmse
 
@@ -87,7 +95,6 @@ Colorbar(fig[1, 6], hm3)
 
 save(joinpath(@__DIR__, "terrain_comparison.png"), fig)
 @info "Displaying figure..."
-display(fig)
 
 #-----------------------------------------------------------------------------# Cross-section comparison
 @info "Creating cross-section comparison..."
@@ -106,6 +113,6 @@ lines!(ax_cross, x_coords, z_pred_slice, label="Predicted", linewidth=2, linesty
 axislegend(ax_cross, position=:rt)
 
 save(joinpath(@__DIR__, "terrain_cross_section.png"), fig_cross)
-display(fig_cross)
+
 
 @info "Done! ImplicitTerrain example complete."

@@ -9,7 +9,7 @@ import DimensionalData as DD
 
 import StatsAPI: predict, fit!
 
-export ImplicitTerrain, WindSurrogate, predict, fit!
+export ImplicitTerrain, WindSurrogate, CategoricalSIREN, predict, fit!
 
 
 #-----------------------------------------------------------------------------# normalize
@@ -175,7 +175,10 @@ gaussian(u, k) = exp(-0.5 * (k * u) ^ 2)
 GI.crs(o::GeomWrap) = GI.crs(o.geometry)
 GI.extent(o::GeomWrap) = GI.extent(o.geometry)
 
-predict(o::GeomWrap, coords::Tuple) = o.kernel(GO.distance(GI.Point(coords), o.geometry))
+function predict(o::GeomWrap, coords::Tuple)
+    pt = GI.Point(coords)
+    return o.kernel(GO.distance(pt, o.geometry))
+end
 
 function predict(o::GeomWrap, r::Raster)
     ẑ = [predict(o, pt) for pt in DimPoints(r)]
@@ -186,5 +189,7 @@ end
 include("ImplicitTerrain.jl")
 
 include("WindSurrogate.jl")
+
+include("CategoricalSIREN.jl")
 
 end

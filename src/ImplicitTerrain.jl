@@ -15,8 +15,18 @@ init_weight_h(rng, out, in) = (max_init_weight(in) * rand(rng, Float32, out, in)
 
 init_bias(rng, out) = zeros(Float32, out)
 
+# SIREN activation functor (avoids closure capture overhead)
+struct SIRENActivation{T} <: Function
+    ω::T
+end
+(s::SIRENActivation)(x) = sin(s.ω * x)
+
+# NNlib compatibility for fast activation
+import NNlib: fast_act
+fast_act(s::SIRENActivation, ::AbstractArray) = s
+
 #-----------------------------------------------------------------------------# MLP
-struct MLP{T, P, S, TS}
+mutable struct MLP{T, P, S, TS}
     chain::T
     parameters::P
     states::S
@@ -36,7 +46,7 @@ struct MLP{T, P, S, TS}
                 init_bias = init_bias
 			)
 	    layers = [
-	        Dense(in, hidden, x -> sin(ω0 * x); init_weight = init_weight_1, init_bias),
+	        Dense(in, hidden, SIRENActivation(ω0); init_weight = init_weight_1, init_bias),
 	        [Dense(hidden, hidden, sin; init_weight = init_weight_h, init_bias) for _ in 2:n_hidden]...,
 	        Dense(hidden, out, sin; init_weight=init_weight_h, init_bias)
 	    ]
@@ -49,7 +59,7 @@ end
 
 Base.show(io::IO, M::MIME"text/plain", o::MLP) = print(io, "ImplicitTerrain.MLP")
 
-predict(o::MLP, x::AbstractMatrix) = Lux.apply(o.chain, x, o.parameters, o.states)[1]
+predict(o::MLP, x::AbstractMatrix) = Lux.apply(o.chain, x, o.train_state.parameters, o.train_state.states)[1]
 
 predict(o::MLP, coords::Tuple) = predict(o, hcat(collect(Float32, coords)))[1]
 
@@ -60,25 +70,53 @@ function predict(o::MLP, r::Raster)
 end
 
 function features(r::Raster)
-    df = DataFrame(r)
-    x = normalize(df.X)
-    y = normalize(df.Y)
-    return Float32[x'; y']
+    # Extract coordinates directly from raster dimensions (avoid DataFrame conversion)
+    xs = Float32.(DD.dims(r, X).val)
+    ys = Float32.(DD.dims(r, Y).val)
+    nx, ny = length(xs), length(ys)
+    # Create coordinate grid: each column is (x, y) for one pixel
+    coords = Matrix{Float32}(undef, 2, nx * ny)
+    idx = 1
+    for j in 1:ny, i in 1:nx
+        coords[1, idx] = xs[i]
+        coords[2, idx] = ys[j]
+        idx += 1
+    end
+    return coords
 end
 
 #-----------------------------------------------------------------------------# fit!
-function fit!(o::MLP, x::AbstractMatrix, y::AbstractVector; steps = 1)
-    for _ in 1:steps
-        Lux.Training.single_train_step!(AutoZygote(), Lux.MSELoss(), (x, y'), o.train_state)
+function fit!(o::MLP, x::AbstractMatrix, y::AbstractVector; steps = 1, batchsize = nothing)
+    ts = o.train_state
+    loss_fn = Lux.MSELoss()
+    backend = AutoZygote()
+    n = size(x, 2)
+    bs = isnothing(batchsize) ? n : min(batchsize, n)
+
+    if bs >= n
+        # Full-batch training
+        y_row = y'
+        for _ in 1:steps
+            _, _, _, ts = Lux.Training.single_train_step!(backend, loss_fn, (x, y_row), ts)
+        end
+    else
+        # Mini-batch training
+        for _ in 1:steps
+            idxs = rand(1:n, bs)
+            x_batch = @view x[:, idxs]
+            y_batch = y[idxs]'
+            _, _, _, ts = Lux.Training.single_train_step!(backend, loss_fn, (x_batch, y_batch), ts)
+        end
     end
+    o.train_state = ts
     return o
 end
 
-function fit!(o::MLP, r::Raster; steps = 1)
+function fit!(o::MLP, r::Raster; steps = 1, batchsize = nothing)
     is_normalized(r) || error("Raster must be normalized (see GeoSurrogates.normalize) before fitting.")
     x = features(r)
-    y = Float32.(vec(r.data))
-    return fit!(o, x, y; steps=steps)
+    y = r.data isa AbstractArray{Float32} ? vec(r.data) : Float32.(vec(r.data))
+    return fit!(o, x, y; steps, batchsize)
 end
 
 
@@ -99,14 +137,21 @@ end
 
 #-----------------------------------------------------------------------------# fit!
 # Here steps == steps per pyramid level
-function fit!(o::Model, r::Raster; steps = 1000)
+function fit!(o::Model, r::Raster; steps = 1000, batchsize = nothing)
     pyr = _gaussian_pyramid(r)
+    # Fit surface model progressively on pyramid levels (coarse to fine)
     for (i, level) in enumerate(reverse(@view(pyr[2:end])))
         @info "Fitting surface model on pyramid level $i/$(length(pyr) - 1) with size $(size(level))"
-        fit!(o.surface, level; steps)
+        fit!(o.surface, level; steps, batchsize)
     end
-    @info "Fitting geometry model on original raster with size $(size(r))"
-    fit!(o.geometry, first(pyr); steps)
+    # Compute residuals: original - surface_prediction
+    full_res = first(pyr)
+    x = features(full_res)
+    surface_pred = predict(o.surface, x)
+    y_residuals = Float32.(vec(full_res.data)) .- vec(surface_pred)
+    # Fit geometry model on residuals to capture fine details
+    @info "Fitting geometry model on residuals with size $(size(full_res))" residual_range=extrema(y_residuals)
+    fit!(o.geometry, x, y_residuals; steps, batchsize)
     return o
 end
 
@@ -114,7 +159,6 @@ end
 # Avoiding piracy from Images/Rasters
 # Assumes input raster is normalized
 function _gaussian_pyramid(r::Raster, σ = 4, n = 4, downsample = 2)
-    rnorm = normalize(r)
     # Preserve dimension ordering (increasing vs decreasing)
     x_order = step(DD.dims(r, X).val.data) > 0 ? (-1f0, 1f0) : (1f0, -1f0)
     y_order = step(DD.dims(r, Y).val.data) > 0 ? (-1f0, 1f0) : (1f0, -1f0)
@@ -127,7 +171,8 @@ function _gaussian_pyramid(r::Raster, σ = 4, n = 4, downsample = 2)
             return DD.rebuild(d, x)
         end
     end
-    pyramid = [Raster(Float32.(rnorm.data), dims)]
+    rdata = r.data isa AbstractArray{Float32} ? r.data : Float32.(r.data)
+    pyramid = [Raster(rdata, dims)]
 
     for i in 2:n
         prev = pyramid[end]

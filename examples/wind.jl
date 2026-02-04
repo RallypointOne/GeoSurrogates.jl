@@ -118,22 +118,58 @@ v_norm = GeoSurrogates.normalize(v_raw)
 model = GeoSurrogates.WindSurrogate.WindSIREN(
     hidden = 256,
     n_hidden = 3,
-    ω0 = 30f0,
+    ω0 = 10f0,
 )
 
-n_steps = 2000
-@info "Training WindSIREN for $n_steps steps..."
-@time fit!(model, u_norm, v_norm; steps=n_steps)
+n_steps = 4000
+eval_interval = 50
+@info "Training WindSIREN for $n_steps steps (evaluating every $eval_interval steps)..."
 
-@info "Training complete!"
+# Train in chunks and compute MAE at intervals
+losses = Float32[]
+u_maes = Float32[]
+v_maes = Float32[]
+eval_steps = Int[]
+
+@time for step in 1:eval_interval:n_steps
+    chunk_size = min(eval_interval, n_steps - step + 1)
+    chunk_losses = fit!(model, u_norm, v_norm; steps=chunk_size)
+    append!(losses, chunk_losses)
+
+    # Compute MAE on training data
+    u_pred_eval, v_pred_eval = predict(model, u_norm)
+    push!(u_maes, mean(abs.(skipmissing(u_norm .- u_pred_eval))))
+    push!(v_maes, mean(abs.(skipmissing(v_norm .- v_pred_eval))))
+    push!(eval_steps, step + chunk_size - 1)
+end
+
+@info "Training complete!" final_loss=losses[end] u_mae=u_maes[end] v_mae=v_maes[end]
+
+# Plot loss and MAE over time
+@info "Plotting training metrics..."
+fig_loss = Figure(size=(800, 400))
+ax_loss = Axis(fig_loss[1, 1], title="Training Metrics", xlabel="Step", ylabel="Value", yscale=log10)
+lines!(ax_loss, 1:length(losses), losses, color=:blue, label="MSE Loss")
+lines!(ax_loss, eval_steps, u_maes, color=:red, label="U MAE")
+lines!(ax_loss, eval_steps, v_maes, color=:orange, label="V MAE")
+axislegend(ax_loss, position=:rt)
+save(joinpath(@__DIR__, "wind_loss.png"), fig_loss)
+display(fig_loss)
 
 #-----------------------------------------------------------------------------# Predictions
 @info "Generating predictions..."
-u_pred, v_pred = predict(model, u_norm)
 
-# Calculate errors
-u_error = u_norm .- u_pred
-v_error = v_norm .- v_pred
+# Create higher resolution raster for predictions (4x resolution)
+orig_size = size(u_norm)
+hires_size = orig_size .* 4
+u_norm_hires = resample(u_norm, size=hires_size)
+u_pred, v_pred = predict(model, u_norm_hires)
+
+# Calculate errors (resample original to match prediction resolution)
+u_norm_compare = resample(u_norm, size=hires_size)
+v_norm_compare = resample(v_norm, size=hires_size)
+u_error = u_norm_compare .- u_pred
+v_error = v_norm_compare .- v_pred
 
 @info "Prediction errors:" u_mae=mean(abs.(skipmissing(u_error))) v_mae=mean(abs.(skipmissing(v_error)))
 
@@ -198,6 +234,21 @@ arrows2d!(ax6, vec(coords_x), vec(coords_y), vec(u_pred_vec), vec(v_pred_vec),
 save(joinpath(@__DIR__, "wind_comparison.png"), fig)
 @info "Displaying figure..."
 display(fig)
+
+#-----------------------------------------------------------------------------# U component comparison
+@info "Creating U component comparison plot..."
+fig_u = Figure(size=(500, 700))
+
+ax_u1 = Axis(fig_u[1, 1], title="U (original)", aspect=DataAspect())
+hm_u1 = heatmap!(ax_u1, u_norm)
+Colorbar(fig_u[1, 2], hm_u1)
+
+ax_u2 = Axis(fig_u[2, 1], title="U (predicted)", aspect=DataAspect())
+hm_u2 = heatmap!(ax_u2, u_pred)
+Colorbar(fig_u[2, 2], hm_u2)
+
+save(joinpath(@__DIR__, "wind_u_comparison.png"), fig_u)
+display(fig_u)
 
 #-----------------------------------------------------------------------------# Wind arrows on map
 @info "Creating wind arrows on map..."
