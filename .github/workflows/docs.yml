@@ -40,8 +40,11 @@ jobs:
             Pkg.instantiate()
             Pkg.add(["IJulia", "Zygote"])
             using IJulia
-            IJulia.installkernel("Julia", "--project=@.")
+            # Install kernel with explicit name matching _quarto.yml
+            IJulia.installkernel("julia-1.11", "--project=${{ github.workspace }}")
           '
+          # Verify kernel installation
+          jupyter kernelspec list
 
       - name: Setup Quarto
         uses: quarto-dev/quarto-actions/setup@v2
