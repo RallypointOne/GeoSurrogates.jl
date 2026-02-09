@@ -15,6 +15,7 @@ using Rasters
 using DimensionalData
 using Statistics
 using Zygote  # Required for neural network training
+using CairoMakie  # For plotting
 
 # Create sample elevation data (a simple hill)
 # Using 51 points so that 0.0 is exactly on the grid
@@ -41,6 +42,29 @@ println("  veg:  $(size(veg)) categorical raster (classes: $(sort(unique(veg))))
 println("  u_wind, v_wind: $(size(u_wind)) wind component rasters")
 ```
 
+```{julia}
+#| label: fig-sample-data
+#| fig-cap: "Sample data: elevation (left), vegetation classes (center), wind field (right)"
+
+fig = Figure(size=(900, 300))
+ax1 = Axis(fig[1, 1], title="Elevation", xlabel="X", ylabel="Y", aspect=1)
+heatmap!(ax1, collect(xs), collect(ys), elevation_data, colormap=:viridis)
+
+ax2 = Axis(fig[1, 2], title="Vegetation Classes", xlabel="X", ylabel="Y", aspect=1)
+heatmap!(ax2, collect(xs), collect(ys), cat_data, colormap=:Set1_3)
+
+ax3 = Axis(fig[1, 3], title="Wind Field", xlabel="X", ylabel="Y", aspect=1)
+# Subsample for arrow visibility
+step = 5
+arrow_xs = xs[1:step:end]
+arrow_ys = ys[1:step:end]
+u_sub = u_data[1:step:end, 1:step:end]
+v_sub = v_data[1:step:end, 1:step:end]
+arrows!(ax3, [x for x in arrow_xs for _ in arrow_ys], [y for _ in arrow_xs for y in arrow_ys],
+        vec(u_sub), vec(v_sub), lengthscale=0.15, color=:black)
+fig
+```
+
 ---
 
 ## Classical Surrogates
@@ -53,16 +77,35 @@ Linear regression surrogate for simple trend modeling.
 using StatsModels
 
 # Fit a quadratic model
-model = LinReg(elev, @formula(layer1 ~ 1 + X + Y + X^2 + Y^2))
+linreg_model = LinReg(elev, @formula(layer1 ~ 1 + X + Y + X^2 + Y^2))
 
 # Predict at a single point
-val = predict(model, (0.0, 0.0))
+val = predict(linreg_model, (0.0, 0.0))
 println("Prediction at (0, 0): $val")
 
 # Predict on the full raster
-predicted = predict(model, elev)
-error = mean(abs.(elev .- predicted))
+linreg_predicted = predict(linreg_model, elev)
+error = mean(abs.(elev .- linreg_predicted))
 println("Mean absolute error: $(round(error, digits=4))")
+```
+
+```{julia}
+#| label: fig-linreg
+#| fig-cap: "LinReg: Original elevation (left) vs quadratic fit (center) and error (right)"
+
+fig = Figure(size=(900, 300))
+ax1 = Axis(fig[1, 1], title="Original", xlabel="X", ylabel="Y", aspect=1)
+hm1 = heatmap!(ax1, collect(xs), collect(ys), elevation_data, colormap=:viridis)
+Colorbar(fig[1, 1][1, 2], hm1)
+
+ax2 = Axis(fig[1, 2], title="LinReg Prediction", xlabel="X", ylabel="Y", aspect=1)
+hm2 = heatmap!(ax2, collect(xs), collect(ys), Matrix(linreg_predicted), colormap=:viridis)
+Colorbar(fig[1, 2][1, 2], hm2)
+
+ax3 = Axis(fig[1, 3], title="Absolute Error", xlabel="X", ylabel="Y", aspect=1)
+hm3 = heatmap!(ax3, collect(xs), collect(ys), abs.(elevation_data .- Matrix(linreg_predicted)), colormap=:Reds)
+Colorbar(fig[1, 3][1, 2], hm3)
+fig
 ```
 
 ### RasterWrap
@@ -93,6 +136,21 @@ upsampled = predict(rw, fine_raster)
 println("Upsampled from $(size(elev)) to $(size(upsampled))")
 ```
 
+```{julia}
+#| label: fig-rasterwrap
+#| fig-cap: "RasterWrap: Original 51x51 grid (left) upsampled to 100x100 (right)"
+
+fig = Figure(size=(600, 300))
+ax1 = Axis(fig[1, 1], title="Original (51x51)", xlabel="X", ylabel="Y", aspect=1)
+hm1 = heatmap!(ax1, collect(xs), collect(ys), elevation_data, colormap=:viridis)
+Colorbar(fig[1, 1][1, 2], hm1)
+
+ax2 = Axis(fig[1, 2], title="Upsampled (100x100)", xlabel="X", ylabel="Y", aspect=1)
+hm2 = heatmap!(ax2, collect(fine_xs), collect(fine_ys), Matrix(upsampled), colormap=:viridis)
+Colorbar(fig[1, 2][1, 2], hm2)
+fig
+```
+
 ### CategoricalRasterWrap
 
 Kernel smoothing surrogate for categorical data. Returns probability distributions over classes.
@@ -114,6 +172,17 @@ println("\nClass probabilities at (0.9, 0.9):")
 for (k, v) in sort(collect(probs_edge), by=first)
     println("  Class $k: $(round(v, digits=3))")
 end
+```
+
+```{julia}
+#| label: fig-catraster
+#| fig-cap: "CategoricalRasterWrap: Categorical vegetation classes"
+
+fig = Figure(size=(400, 350))
+ax = Axis(fig[1, 1], title="Vegetation Classes", xlabel="X", ylabel="Y", aspect=1)
+hm = heatmap!(ax, collect(xs), collect(ys), cat_data, colormap=:Set1_3)
+Colorbar(fig[1, 2], hm, label="Class", ticks=1:3)
+fig
 ```
 
 ### GeomWrap
@@ -142,6 +211,18 @@ influence = predict(gw, elev)
 println("\nInfluence raster range: $(round(minimum(influence), digits=4)) to $(round(maximum(influence), digits=4))")
 ```
 
+```{julia}
+#| label: fig-geomwrap
+#| fig-cap: "GeomWrap: Distance-based influence from a point at the origin"
+
+fig = Figure(size=(400, 350))
+ax = Axis(fig[1, 1], title="Influence from Point at Origin", xlabel="X", ylabel="Y", aspect=1)
+hm = heatmap!(ax, collect(xs), collect(ys), Matrix(influence), colormap=:YlOrRd)
+scatter!(ax, [0.0], [0.0], color=:blue, markersize=15, marker=:star5)
+Colorbar(fig[1, 2], hm, label="Influence")
+fig
+```
+
 ---
 
 ## Neural Network Surrogates
@@ -162,15 +243,30 @@ mlp = ImplicitTerrain.MLP(hidden=64, n_hidden=2)  # Smaller network for demo
 fit!(mlp, elev_norm; steps=50)
 
 # Predict
-predicted = predict(mlp, elev_norm)
-error = mean(abs.(elev_norm .- predicted))
+mlp_predicted = predict(mlp, elev_norm)
+error = mean(abs.(elev_norm .- mlp_predicted))
 println("Mean absolute error after 50 steps: $(round(error, digits=4))")
 
 # Train more
 fit!(mlp, elev_norm; steps=50)
-predicted = predict(mlp, elev_norm)
-error = mean(abs.(elev_norm .- predicted))
+mlp_predicted = predict(mlp, elev_norm)
+error = mean(abs.(elev_norm .- mlp_predicted))
 println("Mean absolute error after 100 steps: $(round(error, digits=4))")
+```
+
+```{julia}
+#| label: fig-mlp
+#| fig-cap: "ImplicitTerrain.MLP: Original normalized elevation (left) vs neural network prediction (right)"
+
+fig = Figure(size=(600, 300))
+ax1 = Axis(fig[1, 1], title="Original (Normalized)", xlabel="X", ylabel="Y", aspect=1)
+hm1 = heatmap!(ax1, collect(xs), collect(ys), Matrix(elev_norm), colormap=:viridis)
+Colorbar(fig[1, 1][1, 2], hm1)
+
+ax2 = Axis(fig[1, 2], title="MLP Prediction", xlabel="X", ylabel="Y", aspect=1)
+hm2 = heatmap!(ax2, collect(xs), collect(ys), Matrix(mlp_predicted), colormap=:viridis)
+Colorbar(fig[1, 2][1, 2], hm2)
+fig
 ```
 
 ### ImplicitTerrain.Model
@@ -179,22 +275,41 @@ Cascaded SIREN with surface and geometry components, trained progressively.
 
 ```{julia}
 # Create the cascaded model
-model = ImplicitTerrain.Model()
+terrain_model = ImplicitTerrain.Model()
 
 # Fit with progressive Gaussian pyramid training
 # Using minimal steps for demo (normally use 1000+)
-fit!(model, elev_norm; steps=20)
+fit!(terrain_model, elev_norm; steps=20)
 
 # Predict
-predicted = predict(model, elev_norm)
-error = mean(abs.(elev_norm .- predicted))
+terrain_predicted = predict(terrain_model, elev_norm)
+error = mean(abs.(elev_norm .- terrain_predicted))
 println("Mean absolute error: $(round(error, digits=4))")
 
 # The model combines surface (broad features) + geometry (fine details)
-surface_pred = predict(model.surface, elev_norm)
-geometry_pred = predict(model.geometry, elev_norm)
+surface_pred = predict(terrain_model.surface, elev_norm)
+geometry_pred = predict(terrain_model.geometry, elev_norm)
 println("Surface contribution range: $(round.(extrema(surface_pred), digits=3))")
 println("Geometry contribution range: $(round.(extrema(geometry_pred), digits=3))")
+```
+
+```{julia}
+#| label: fig-terrain-model
+#| fig-cap: "ImplicitTerrain.Model: Surface component (left), geometry component (center), combined prediction (right)"
+
+fig = Figure(size=(900, 300))
+ax1 = Axis(fig[1, 1], title="Surface Component", xlabel="X", ylabel="Y", aspect=1)
+hm1 = heatmap!(ax1, collect(xs), collect(ys), Matrix(surface_pred), colormap=:viridis)
+Colorbar(fig[1, 1][1, 2], hm1)
+
+ax2 = Axis(fig[1, 2], title="Geometry Component", xlabel="X", ylabel="Y", aspect=1)
+hm2 = heatmap!(ax2, collect(xs), collect(ys), Matrix(geometry_pred), colormap=:viridis)
+Colorbar(fig[1, 2][1, 2], hm2)
+
+ax3 = Axis(fig[1, 3], title="Combined Prediction", xlabel="X", ylabel="Y", aspect=1)
+hm3 = heatmap!(ax3, collect(xs), collect(ys), Matrix(terrain_predicted), colormap=:viridis)
+Colorbar(fig[1, 3][1, 2], hm3)
+fig
 ```
 
 ### WindSurrogate.WindSIREN
@@ -222,6 +337,24 @@ println("V component MAE: $(round(v_error, digits=4))")
 u_val, v_val = predict(wind_model, (0.0, 0.0))
 println("\nWind at (0, 0): u=$(round(u_val, digits=3)), v=$(round(v_val, digits=3))")
 println("Expected: u≈0, v≈0 (center of circular flow)")
+```
+
+```{julia}
+#| label: fig-wind
+#| fig-cap: "WindSIREN: Original wind field (left) vs predicted wind field (right)"
+
+fig = Figure(size=(600, 300))
+
+ax1 = Axis(fig[1, 1], title="Original Wind Field", xlabel="X", ylabel="Y", aspect=1)
+arrows!(ax1, [x for x in arrow_xs for _ in arrow_ys], [y for _ in arrow_xs for y in arrow_ys],
+        vec(u_sub), vec(v_sub), lengthscale=0.15, color=:black)
+
+ax2 = Axis(fig[1, 2], title="Predicted Wind Field", xlabel="X", ylabel="Y", aspect=1)
+u_pred_sub = Matrix(u_pred)[1:step:end, 1:step:end]
+v_pred_sub = Matrix(v_pred)[1:step:end, 1:step:end]
+arrows!(ax2, [x for x in arrow_xs for _ in arrow_ys], [y for _ in arrow_xs for y in arrow_ys],
+        vec(u_pred_sub), vec(v_pred_sub), lengthscale=0.15, color=:black)
+fig
 ```
 
 ### CategoricalSIREN.CatSIREN
@@ -253,6 +386,21 @@ println("Actual class at (0,0): $actual_class")
 class_raster = CategoricalSIREN.predict_class(cat_model, veg)
 accuracy = mean(class_raster .== veg)
 println("Overall accuracy: $(round(accuracy * 100, digits=1))%")
+```
+
+```{julia}
+#| label: fig-catsiren
+#| fig-cap: "CatSIREN: Original classes (left) vs predicted classes (right)"
+
+fig = Figure(size=(600, 300))
+ax1 = Axis(fig[1, 1], title="Original Classes", xlabel="X", ylabel="Y", aspect=1)
+hm1 = heatmap!(ax1, collect(xs), collect(ys), cat_data, colormap=:Set1_3)
+Colorbar(fig[1, 1][1, 2], hm1, ticks=1:3)
+
+ax2 = Axis(fig[1, 2], title="Predicted Classes", xlabel="X", ylabel="Y", aspect=1)
+hm2 = heatmap!(ax2, collect(xs), collect(ys), Matrix(class_raster), colormap=:Set1_3)
+Colorbar(fig[1, 2][1, 2], hm2, ticks=1:3)
+fig
 ```
 
 ---
