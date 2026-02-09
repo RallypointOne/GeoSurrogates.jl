@@ -80,7 +80,7 @@ Input `x` should be a 2×N matrix of normalized coordinates.
 Returns a 2×N matrix where row 1 is u and row 2 is v.
 """
 function predict(o::WindSIREN, x::AbstractMatrix)
-    Lux.apply(o.chain, x, o.parameters, o.states)[1]
+    Lux.apply(o.chain, x, o.train_state.parameters, o.train_state.states)[1]
 end
 
 """

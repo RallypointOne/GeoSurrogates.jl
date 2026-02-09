@@ -17,8 +17,9 @@ using Statistics
 using Zygote  # Required for neural network training
 
 # Create sample elevation data (a simple hill)
-xs = range(-1, 1, length=50)
-ys = range(-1, 1, length=50)
+# Using 51 points so that 0.0 is exactly on the grid
+xs = range(-1, 1, length=51)
+ys = range(-1, 1, length=51)
 elevation_data = [exp(-(x^2 + y^2)) for x in xs, y in ys]
 elev = Raster(elevation_data, (X(xs), Y(ys)))
 
@@ -34,7 +35,7 @@ v_data = [x for x in xs, y in ys]
 u_wind = Raster(u_data, (X(xs), Y(ys)))
 v_wind = Raster(v_data, (X(xs), Y(ys)))
 
-println("Sample data created:")
+println("Sample data created (51x51 grids with 0.0 on grid):")
 println("  elev: $(size(elev)) elevation raster")
 println("  veg:  $(size(veg)) categorical raster (classes: $(sort(unique(veg))))")
 println("  u_wind, v_wind: $(size(u_wind)) wind component rasters")

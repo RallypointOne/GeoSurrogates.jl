@@ -84,7 +84,7 @@ Input `x` should be a 2×N matrix of normalized coordinates.
 Returns an n_classes×N matrix of probabilities (columns sum to 1).
 """
 function predict(o::CatSIREN, x::AbstractMatrix)
-    Lux.apply(o.chain, x, o.parameters, o.states)[1]
+    Lux.apply(o.chain, x, o.train_state.parameters, o.train_state.states)[1]
 end
 
 """
