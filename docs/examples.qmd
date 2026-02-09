@@ -1,0 +1,269 @@
+---
+title: "Examples"
+---
+
+This page provides runnable examples for every surrogate type in GeoSurrogates.jl.
+
+## Setup
+
+First, let's load the packages and create some sample data to work with.
+
+```{julia}
+using GeoSurrogates
+using Rasters
+using DimensionalData
+using Statistics
+using Zygote  # Required for neural network training
+
+# Create sample elevation data (a simple hill)
+xs = range(-1, 1, length=50)
+ys = range(-1, 1, length=50)
+elevation_data = [exp(-(x^2 + y^2)) for x in xs, y in ys]
+elev = Raster(elevation_data, (X(xs), Y(ys)))
+
+# Create sample categorical data (3 classes based on elevation)
+cat_data = map(elevation_data) do v
+    v < 0.3 ? 1 : v < 0.7 ? 2 : 3
+end
+veg = Raster(cat_data, (X(xs), Y(ys)))
+
+# Create sample wind data (circular flow)
+u_data = [-y for x in xs, y in ys]
+v_data = [x for x in xs, y in ys]
+u_wind = Raster(u_data, (X(xs), Y(ys)))
+v_wind = Raster(v_data, (X(xs), Y(ys)))
+
+println("Sample data created:")
+println("  elev: $(size(elev)) elevation raster")
+println("  veg:  $(size(veg)) categorical raster (classes: $(sort(unique(veg))))")
+println("  u_wind, v_wind: $(size(u_wind)) wind component rasters")
+```
+
+---
+
+## Classical Surrogates
+
+### LinReg
+
+Linear regression surrogate for simple trend modeling.
+
+```{julia}
+using StatsModels
+
+# Fit a quadratic model
+model = LinReg(elev, @formula(layer1 ~ 1 + X + Y + X^2 + Y^2))
+
+# Predict at a single point
+val = predict(model, (0.0, 0.0))
+println("Prediction at (0, 0): $val")
+
+# Predict on the full raster
+predicted = predict(model, elev)
+error = mean(abs.(elev .- predicted))
+println("Mean absolute error: $(round(error, digits=4))")
+```
+
+### RasterWrap
+
+Interpolation-based surrogate using B-splines. Provides exact interpolation at grid points.
+
+```{julia}
+using Interpolations
+
+# Create interpolation wrapper (default: linear B-spline)
+rw = RasterWrap(elev)
+
+# Predict at grid points (exact)
+original_val = elev[X=At(0.0), Y=At(0.0)]
+predicted_val = predict(rw, (0.0, 0.0))
+println("Original value at (0,0): $original_val")
+println("Predicted value at (0,0): $predicted_val")
+
+# Predict at off-grid point (interpolated)
+offgrid_val = predict(rw, (0.01, 0.01))
+println("Interpolated value at (0.01, 0.01): $(round(offgrid_val, digits=4))")
+
+# Predict on a finer grid
+fine_xs = range(-1, 1, length=100)
+fine_ys = range(-1, 1, length=100)
+fine_raster = Raster(zeros(100, 100), (X(fine_xs), Y(fine_ys)))
+upsampled = predict(rw, fine_raster)
+println("Upsampled from $(size(elev)) to $(size(upsampled))")
+```
+
+### CategoricalRasterWrap
+
+Kernel smoothing surrogate for categorical data. Returns probability distributions over classes.
+
+```{julia}
+# Create categorical wrapper
+crw = CategoricalRasterWrap(veg)
+
+# Predict probabilities at center (should favor class 3 - highest elevation)
+probs = predict(crw, (0.0, 0.0))
+println("Class probabilities at (0, 0):")
+for (k, v) in sort(collect(probs), by=first)
+    println("  Class $k: $(round(v, digits=3))")
+end
+
+# Predict at edge (should favor class 1 - lowest elevation)
+probs_edge = predict(crw, (0.9, 0.9))
+println("\nClass probabilities at (0.9, 0.9):")
+for (k, v) in sort(collect(probs_edge), by=first)
+    println("  Class $k: $(round(v, digits=3))")
+end
+```
+
+### GeomWrap
+
+Geometry-based surrogate using distance kernels. Points near the geometry have values close to 1.
+
+```{julia}
+import GeoInterface as GI
+
+# Create a point geometry at the origin
+pt = GI.Point(0.0, 0.0)
+gw = GeomWrap(pt)
+
+# Predict at the point itself
+val_at_point = predict(gw, (0.0, 0.0))
+println("Value at geometry: $val_at_point")
+
+# Predict at increasing distances
+for dist in [0.1, 0.25, 0.5, 1.0]
+    val = predict(gw, (dist, 0.0))
+    println("Value at distance $dist: $(round(val, digits=4))")
+end
+
+# Create influence raster
+influence = predict(gw, elev)
+println("\nInfluence raster range: $(round(minimum(influence), digits=4)) to $(round(maximum(influence), digits=4))")
+```
+
+---
+
+## Neural Network Surrogates
+
+Neural network surrogates require normalized data (values in [-1, 1]).
+
+### ImplicitTerrain.MLP
+
+Single SIREN network for scalar field approximation.
+
+```{julia}
+# Normalize the elevation data
+elev_norm = normalize(elev)
+println("Normalized elevation range: $(extrema(elev_norm))")
+
+# Create and train MLP
+mlp = ImplicitTerrain.MLP(hidden=64, n_hidden=2)  # Smaller network for demo
+fit!(mlp, elev_norm; steps=50)
+
+# Predict
+predicted = predict(mlp, elev_norm)
+error = mean(abs.(elev_norm .- predicted))
+println("Mean absolute error after 50 steps: $(round(error, digits=4))")
+
+# Train more
+fit!(mlp, elev_norm; steps=50)
+predicted = predict(mlp, elev_norm)
+error = mean(abs.(elev_norm .- predicted))
+println("Mean absolute error after 100 steps: $(round(error, digits=4))")
+```
+
+### ImplicitTerrain.Model
+
+Cascaded SIREN with surface and geometry components, trained progressively.
+
+```{julia}
+# Create the cascaded model
+model = ImplicitTerrain.Model()
+
+# Fit with progressive Gaussian pyramid training
+# Using minimal steps for demo (normally use 1000+)
+fit!(model, elev_norm; steps=20)
+
+# Predict
+predicted = predict(model, elev_norm)
+error = mean(abs.(elev_norm .- predicted))
+println("Mean absolute error: $(round(error, digits=4))")
+
+# The model combines surface (broad features) + geometry (fine details)
+surface_pred = predict(model.surface, elev_norm)
+geometry_pred = predict(model.geometry, elev_norm)
+println("Surface contribution range: $(round.(extrema(surface_pred), digits=3))")
+println("Geometry contribution range: $(round.(extrema(geometry_pred), digits=3))")
+```
+
+### WindSurrogate.WindSIREN
+
+SIREN network for 2D vector fields (u, v wind components).
+
+```{julia}
+# Normalize wind components
+u_norm = normalize(u_wind)
+v_norm = normalize(v_wind)
+
+# Create and train WindSIREN
+wind_model = WindSurrogate.WindSIREN(hidden=64, n_hidden=2)
+fit!(wind_model, u_norm, v_norm; steps=100)
+
+# Predict returns tuple of (u_raster, v_raster)
+u_pred, v_pred = predict(wind_model, u_norm)
+
+u_error = mean(abs.(u_norm .- u_pred))
+v_error = mean(abs.(v_norm .- v_pred))
+println("U component MAE: $(round(u_error, digits=4))")
+println("V component MAE: $(round(v_error, digits=4))")
+
+# Predict at single point
+u_val, v_val = predict(wind_model, (0.0, 0.0))
+println("\nWind at (0, 0): u=$(round(u_val, digits=3)), v=$(round(v_val, digits=3))")
+println("Expected: u≈0, v≈0 (center of circular flow)")
+```
+
+### CategoricalSIREN.CatSIREN
+
+SIREN network for categorical/classification tasks with softmax output.
+
+```{julia}
+# Create CatSIREN from raster (auto-detects classes)
+cat_model = CategoricalSIREN.CatSIREN(veg; hidden=64, n_hidden=2)
+println("Detected classes: $(cat_model.classes)")
+
+# Train
+fit!(cat_model, veg; steps=100)
+
+# Predict probabilities at center
+probs = predict(cat_model, (0.0, 0.0))
+println("\nPredicted probabilities at (0, 0):")
+for (k, v) in sort(collect(probs), by=first)
+    println("  Class $k: $(round(v, digits=3))")
+end
+
+# Predict most likely class
+predicted_class = CategoricalSIREN.predict_class(cat_model, (0.0, 0.0))
+actual_class = veg[X=At(0.0), Y=At(0.0)]
+println("\nPredicted class at (0,0): $predicted_class")
+println("Actual class at (0,0): $actual_class")
+
+# Predict classes for full raster
+class_raster = CategoricalSIREN.predict_class(cat_model, veg)
+accuracy = mean(class_raster .== veg)
+println("Overall accuracy: $(round(accuracy * 100, digits=1))%")
+```
+
+---
+
+## Summary
+
+| Surrogate | Input | Output | Use Case |
+|-----------|-------|--------|----------|
+| `LinReg` | Raster | Scalar | Simple trends |
+| `RasterWrap` | Raster | Scalar | Exact interpolation |
+| `CategoricalRasterWrap` | Categorical Raster | Probability Dict | Categorical smoothing |
+| `GeomWrap` | Geometry | Scalar [0,1] | Distance-based influence |
+| `ImplicitTerrain.MLP` | Normalized Raster | Scalar | Neural compression |
+| `ImplicitTerrain.Model` | Normalized Raster | Scalar | High-quality terrain |
+| `WindSIREN` | Two Normalized Rasters | (Scalar, Scalar) | Vector fields |
+| `CatSIREN` | Categorical Raster | Probability Dict | Neural classification |

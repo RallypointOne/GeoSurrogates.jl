@@ -13,6 +13,8 @@ website:
         text: Home
       - href: getting-started.qmd
         text: Getting Started
+      - href: examples.qmd
+        text: Examples
       - href: api/index.qmd
         text: API Reference
     right:
@@ -38,3 +40,5 @@ format:
 
 execute:
   freeze: auto
+
+jupyter: julia-1.11
