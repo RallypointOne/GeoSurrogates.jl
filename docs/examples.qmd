@@ -1,5 +1,6 @@
 ---
 title: "Examples"
+engine: julia
 ---
 
 This page provides runnable examples for every surrogate type in GeoSurrogates.jl.

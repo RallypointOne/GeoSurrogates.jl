@@ -28,7 +28,7 @@ jobs:
       - name: Setup Julia
         uses: julia-actions/setup-julia@v2
         with:
-          version: '1.11'
+          version: '1'  # Latest stable Julia
 
       - name: Cache Julia packages
         uses: julia-actions/cache@v2
@@ -38,13 +38,8 @@ jobs:
           julia --project=. -e '
             using Pkg
             Pkg.instantiate()
-            Pkg.add(["IJulia", "Zygote"])
-            using IJulia
-            # Install kernel with explicit name matching _quarto.yml
-            IJulia.installkernel("julia-1.11", "--project=${{ github.workspace }}")
+            Pkg.add(["Zygote", "QuartoNotebookRunner"])
           '
-          # Verify kernel installation
-          jupyter kernelspec list
 
       - name: Setup Quarto
         uses: quarto-dev/quarto-actions/setup@v2
