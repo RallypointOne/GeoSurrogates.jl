@@ -88,14 +88,15 @@ function predict(o::CatSIREN, x::AbstractMatrix)
 end
 
 """
-    predict(model::CatSIREN, coords::Tuple) -> Vector{Float32}
+    predict(model::CatSIREN, coords::Tuple) -> Dict
 
 Predict class probabilities for a single coordinate tuple (x, y).
-Returns a vector of probabilities that sum to 1.
+Returns a Dict mapping class labels to probabilities.
 """
 function predict(o::CatSIREN, coords::Tuple)
     out = predict(o, hcat(collect(Float32, coords)))
-    return vec(out)
+    probs = vec(out)
+    return Dict(o.classes[i] => probs[i] for i in eachindex(o.classes))
 end
 
 """
@@ -125,7 +126,16 @@ end
 
 function predict_class(o::CatSIREN, coords::Tuple)
     probs = predict(o, coords)
-    return o.classes[argmax(probs)]
+    # Find the class with maximum probability
+    max_class = first(keys(probs))
+    max_prob = probs[max_class]
+    for (c, p) in probs
+        if p > max_prob
+            max_class = c
+            max_prob = p
+        end
+    end
+    return max_class
 end
 
 function predict_class(o::CatSIREN, r::Raster)
