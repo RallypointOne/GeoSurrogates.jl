@@ -70,14 +70,11 @@ end
 
     # Test that all unique levels are represented
     unique_levels = unique(skipmissing(veg.data))
-    @test length(crw.dict) == length(unique_levels)
+    @test length(crw.geomwraps) == length(unique_levels)
 
-    for (k, v) in crw.dict
-        for pt in v
-            x, y = X(At(pt[1])), Y(At(pt[2]))
-            val = veg[x, y]
-            @test val == k
-        end
+    # Test that each class key is present in the geomwraps
+    for k in keys(crw.geomwraps)
+        @test k in unique_levels
     end
 end
 

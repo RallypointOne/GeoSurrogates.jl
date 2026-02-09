@@ -1,0 +1,62 @@
+---
+title: "GeoSurrogates.jl"
+subtitle: "Implicit Neural Representations for Geospatial Data"
+---
+
+## Overview
+
+**GeoSurrogates.jl** is a Julia package for creating surrogate models of geospatial data. It provides multiple approaches to learn continuous functions from spatial raster data, leveraging both classical methods and neural networks to create compact, efficient representations of geographic phenomena.
+
+## Features
+
+- **Classical Surrogates**: Linear regression, interpolation-based wrapping, and kernel smoothing
+- **Neural Network Surrogates**: SIREN (Sinusoidal Representation Networks) for terrain, wind fields, and categorical data
+- **Seamless Integration**: Works with the [Rasters.jl](https://github.com/rafaqz/Rasters.jl) ecosystem
+- **Arbitrary Resolution**: Predict at any resolution, not just the training resolution
+- **Memory Efficient**: Neural networks as compact alternatives to storing full rasters
+
+## Installation
+
+```julia
+using Pkg
+Pkg.add("GeoSurrogates")
+```
+
+## Quick Example
+
+```julia
+using GeoSurrogates, Rasters
+
+# Load a raster
+elev = Raster("path/to/elevation.tif")
+
+# Create a simple interpolation-based surrogate
+surrogate = RasterWrap(elev)
+
+# Predict at any coordinate
+predict(surrogate, (-105.5, 40.2))
+
+# Or create a neural network surrogate for compression
+model = ImplicitTerrain.Model()
+fit!(model, normalize(elev); steps=1000)
+
+# Predict on a new raster grid
+predicted = predict(model, new_raster)
+```
+
+## Surrogate Types
+
+| Type | Description | Use Case |
+|------|-------------|----------|
+| `LinReg` | Linear regression | Simple trend modeling |
+| `RasterWrap` | B-spline interpolation | Fast exact interpolation |
+| `CategoricalRasterWrap` | Kernel smoothing | Categorical data |
+| `GeomWrap` | Distance-based kernel | Geometry influence fields |
+| `ImplicitTerrain.Model` | Cascaded SIREN | Terrain compression |
+| `WindSurrogate.WindSIREN` | SIREN for vectors | Wind field modeling |
+| `CategoricalSIREN.CatSIREN` | SIREN with softmax | Categorical classification |
+
+## References
+
+- Sitzmann et al. ["Implicit Neural Representations with Periodic Activation Functions"](https://arxiv.org/abs/2006.09661) (2020)
+- ImplicitTerrain paper: [https://arxiv.org/abs/2406.00227](https://arxiv.org/abs/2406.00227)

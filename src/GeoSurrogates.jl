@@ -1,6 +1,6 @@
 module GeoSurrogates
 
-using ADTypes, ArchGDAL, CategoricalArrays, DataFrames, Extents, Interpolations, Images, LazyArrays, Lux, Optimisers, Random, Rasters, RasterDataSources, Statistics, StatsAPI, StatsModels, StyledStrings, Tables
+using ADTypes, ArchGDAL, CategoricalArrays, DataFrames, Extents, Interpolations, Images, LazyArrays, Lux, NNlib, Optimisers, Random, Rasters, RasterDataSources, Statistics, StatsAPI, StatsModels, StyledStrings, Tables
 
 import Extents
 import GeoInterface as GI
@@ -10,6 +10,7 @@ import DimensionalData as DD
 import StatsAPI: predict, fit!
 
 export ImplicitTerrain, WindSurrogate, CategoricalSIREN, predict, fit!
+export LinReg, RasterWrap, CategoricalRasterWrap, GeomWrap, normalize, gaussian
 
 
 #-----------------------------------------------------------------------------# normalize
@@ -106,7 +107,11 @@ struct RasterWrap{R <: Raster, A, E, F} <: GeoSurrogate
 end
 
 predict(rw::RasterWrap, coords::Tuple) = rw.f(coords...)
-predict(rw::RasterWrap, r::Raster) = nothing
+
+function predict(rw::RasterWrap, r::Raster)
+    ẑ = [predict(rw, pt) for pt in DimPoints(r)]
+    return Raster(reshape(ẑ, size(r)), dims=DD.dims(r))
+end
 
 GI.crs(o::RasterWrap) = GI.crs(o.raster)
 GI.extent(o::RasterWrap) = GI.extent(o.raster)
@@ -127,26 +132,27 @@ end
 A GeoSurrogate for categorical rasters using kernel smoothing.  Here, "categorical raster" refers
 to a raster where its numerical data is associated with discrete categories (e.g. land cover types).
 """
-struct CategoricalRasterWrap{R, T, MP, K} <: GeoSurrogate
+struct CategoricalRasterWrap{R, T, G, K} <: GeoSurrogate
     raster::R
-    dict::Dict{T, MP}  # Dict{eltype(raster), Vector{Tuple{Float64, Float64}}}
+    geomwraps::Dict{T, G}  # Dict{eltype(raster), GeomWrap} - cached GeomWrap per class
     kernel::K
 end
 function CategoricalRasterWrap(r::Raster; kernel = Base.Fix2(gaussian, 4))
     df = DataFrame(r)
     gdf = groupby(df, :layer1)
-    dict = Dict(
-        k.layer1 => [(row.X, row.Y) for row in eachrow(group)]
+    # Pre-create GeomWrap objects for each class to avoid repeated allocation
+    geomwraps = Dict(
+        k.layer1 => GeomWrap(GI.MultiPoint([(row.X, row.Y) for row in eachrow(group)]); kernel)
         for (k, group) in pairs(gdf)
     )
-    CategoricalRasterWrap(r, dict, kernel)
+    CategoricalRasterWrap(r, geomwraps, kernel)
 end
 
 GI.crs(o::CategoricalRasterWrap) = GI.crs(o.raster)
 GI.extent(o::CategoricalRasterWrap) = GI.extent(o.raster)
 
 function predict(crw::CategoricalRasterWrap, coords::Tuple)
-    out = Dict(k => predict(GeomWrap(GI.MultiPoint(points)), coords) for (k, points) in crw.dict)
+    out = Dict(k => predict(gw, coords) for (k, gw) in crw.geomwraps)
     sumvals = sum(values(out))
     sumvals == 0 ? out : Dict(k => v / sumvals for (k, v) in out)
 end
@@ -170,7 +176,30 @@ struct GeomWrap{G, K} <: GeoSurrogate
     GeomWrap(geom::G; kernel::K = Base.Fix2(gaussian, 4)) where {G, K} = new{G,K}(geom, kernel)
 end
 
-gaussian(u, k) = exp(-0.5 * (k * u) ^ 2)
+gaussian(u, k) = exp(-0.5 * (k * u) * (k * u))
+
+#-----------------------------------------------------------------------------# SIREN utilities (shared across modules)
+# SIREN activation functor (avoids closure capture overhead)
+struct SIRENActivation{T} <: Function
+    ω::T
+end
+(s::SIRENActivation)(x) = sin(s.ω * x)
+
+# NNlib compatibility for fast activation
+import NNlib: fast_act
+fast_act(s::SIRENActivation, ::AbstractArray) = s
+
+# Weight initialization for SIREN networks
+# First layer initialization: uniform in [-1/in, 1/in]
+init_weight_first(rng, out, in) = (2rand(rng, Float32, out, in) .- 1) ./ in
+
+# Hidden layer initialization: uniform in [-sqrt(6/in), sqrt(6/in)]
+function init_weight_hidden(rng, out, in)
+    limit = sqrt(6f0 / in)
+    return limit .* (2rand(rng, Float32, out, in) .- 1)
+end
+
+init_bias_zeros(rng, out) = zeros(Float32, out)
 
 GI.crs(o::GeomWrap) = GI.crs(o.geometry)
 GI.extent(o::GeomWrap) = GI.extent(o.geometry)

@@ -1,25 +1,12 @@
 module WindSurrogate
 
-using ADTypes, Lux, Random, Optimisers, StyledStrings, Rasters, DataFrames, Images, ProgressMeter
+using ADTypes, Lux, Random, Optimisers, StyledStrings, Rasters, DataFrames, Images
 
-using ..GeoSurrogates: is_normalized, normalize
+using ..GeoSurrogates: is_normalized, normalize, SIRENActivation, init_weight_first, init_weight_hidden, init_bias_zeros
 
 import StatsAPI: predict, fit!
 import DimensionalData as DD
 import RapidRefreshData as RAP
-
-#-----------------------------------------------------------------------------# SIREN Weight Initialization
-# First layer initialization: uniform in [-1/in, 1/in]
-init_weight_first(rng, out, in) = (2rand(rng, Float32, out, in) .- 1) ./ in
-
-# Hidden layer initialization: uniform in [-sqrt(6/in)/ωh, sqrt(6/in)/ωh]
-# For ωh=1, this simplifies to [-sqrt(6/in), sqrt(6/in)]
-function init_weight_hidden(rng, out, in)
-    limit = sqrt(6f0 / in)
-    return limit .* (2rand(rng, Float32, out, in) .- 1)
-end
-
-init_bias_zeros(rng, out) = zeros(Float32, out)
 
 #-----------------------------------------------------------------------------# WindSIREN
 """
@@ -65,12 +52,12 @@ struct WindSIREN{T, P, S, TS}
                 rng = Random.MersenneTwister(42),
                 alg = Adam(0.0001f0),
             )
-        # Build SIREN layers
+        # Build SIREN layers using SIRENActivation functor (avoids closure overhead)
         layers = [
             # First layer with ω0 scaling
-            Dense(in, hidden, x -> sin(ω0 * x); init_weight = init_weight_first, init_bias = init_bias_zeros),
+            Dense(in, hidden, SIRENActivation(ω0); init_weight = init_weight_first, init_bias = init_bias_zeros),
             # Hidden layers with ωh scaling (typically ωh=1)
-            [Dense(hidden, hidden, x -> sin(ωh * x); init_weight = init_weight_hidden, init_bias = init_bias_zeros) for _ in 2:n_hidden]...,
+            [Dense(hidden, hidden, SIRENActivation(ωh); init_weight = init_weight_hidden, init_bias = init_bias_zeros) for _ in 2:n_hidden]...,
             # Output layer (linear, no activation for regression)
             Dense(hidden, out; init_weight = init_weight_hidden, init_bias = init_bias_zeros)
         ]
@@ -143,15 +130,13 @@ Train the model on coordinate-value pairs.
 - `x`: 2×N matrix of normalized (x, y) coordinates
 - `y`: 2×N matrix of (u, v) wind components
 
-Returns a vector of loss values (one per step).
+Returns the fitted model.
 """
 function fit!(o::WindSIREN, x::AbstractMatrix, y::AbstractMatrix; steps = 1)
-    losses = Float32[]
     for _ in 1:steps
-        _, loss, _, _ = Lux.Training.single_train_step!(AutoZygote(), Lux.MSELoss(), (x, y), o.train_state)
-        push!(losses, loss)
+        Lux.Training.single_train_step!(AutoZygote(), Lux.MSELoss(), (x, y), o.train_state)
     end
-    return losses
+    return o
 end
 
 """
@@ -160,7 +145,7 @@ end
 Train the model on u and v wind component rasters.
 Rasters must be normalized before fitting.
 
-Returns a vector of loss values (one per step).
+Returns the fitted model.
 """
 function fit!(o::WindSIREN, u::Raster, v::Raster; steps = 1)
     is_normalized(u) || error("U raster must be normalized (see GeoSurrogates.normalize) before fitting.")
@@ -169,7 +154,7 @@ function fit!(o::WindSIREN, u::Raster, v::Raster; steps = 1)
 
     x = features(u)  # Use u raster for coordinates (both should have same grid)
     y = Float32[vec(u.data)'; vec(v.data)']
-    fit!(o, x, y; steps=steps)
+    return fit!(o, x, y; steps=steps)
 end
 
 """
@@ -177,12 +162,12 @@ end
 
 Train the model on a RasterStack containing :u and :v layers.
 
-Returns a vector of loss values (one per step).
+Returns the fitted model.
 """
 function fit!(o::WindSIREN, uv::DD.AbstractDimStack; steps = 1)
     haskey(uv, :u) || error("RasterStack must have a :u layer")
     haskey(uv, :v) || error("RasterStack must have a :v layer")
-    fit!(o, uv[:u], uv[:v]; steps=steps)
+    return fit!(o, uv[:u], uv[:v]; steps=steps)
 end
 
 

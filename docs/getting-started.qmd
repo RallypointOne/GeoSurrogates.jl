@@ -1,0 +1,175 @@
+---
+title: "Getting Started"
+---
+
+## Installation
+
+GeoSurrogates.jl can be installed using Julia's package manager:
+
+```julia
+using Pkg
+Pkg.add("GeoSurrogates")
+```
+
+## Basic Concepts
+
+### What is a GeoSurrogate?
+
+A **GeoSurrogate** is a function that approximates geospatial data. Given coordinates `(x, y)`, it returns a predicted value. All surrogates in this package implement the `predict` function from StatsAPI:
+
+```julia
+predict(surrogate, (x, y))        # Single point
+predict(surrogate, raster)        # Entire raster grid
+```
+
+### Normalization
+
+Neural network surrogates require data to be normalized to the range `[-1, 1]`. Use the `normalize` function:
+
+```julia
+using GeoSurrogates
+
+# Normalize a raster (data and coordinates)
+r_norm = normalize(raster)
+
+# Check if data is normalized
+is_normalized(r_norm)  # true
+```
+
+## Classical Surrogates
+
+### RasterWrap: Interpolation
+
+The simplest surrogate wraps a raster with B-spline interpolation:
+
+```julia
+using GeoSurrogates, Rasters
+
+# Load your raster
+elev = Raster("elevation.tif")
+
+# Create interpolation surrogate
+rw = RasterWrap(elev)
+
+# Predict at any coordinate within the raster extent
+value = predict(rw, (-105.5, 40.2))
+
+# Predict on a different grid
+new_grid = Raster(zeros(100, 100), dims=(X(-106:-105), Y(40:41)))
+predicted = predict(rw, new_grid)
+```
+
+### LinReg: Linear Regression
+
+For simple trend modeling:
+
+```julia
+# Fit a linear model: z ~ 1 + X * Y
+model = LinReg(elev)
+
+# Or with a custom formula
+using StatsModels
+model = LinReg(elev, @formula(layer1 ~ 1 + X + Y + X^2 + Y^2))
+
+predict(model, (-105.5, 40.2))
+```
+
+### GeomWrap: Geometry Influence
+
+Model the influence of geometric features (points, lines, polygons):
+
+```julia
+using GeoInterface
+
+# Create a geometry
+polygon = GeoInterface.Polygon(...)
+
+# Wrap it as a surrogate
+gw = GeomWrap(polygon; kernel=Base.Fix2(gaussian, 4))
+
+# Points inside/near the geometry have values close to 1
+# Points far away have values close to 0
+predict(gw, (x, y))
+```
+
+## Neural Network Surrogates
+
+### ImplicitTerrain: Terrain Modeling
+
+For high-quality terrain compression using cascaded SIREN networks:
+
+```julia
+using GeoSurrogates
+
+# Load and normalize terrain data
+elev = Raster("elevation.tif")
+elev_norm = normalize(elev)
+
+# Create the model (two cascaded MLPs)
+model = ImplicitTerrain.Model()
+
+# Fit with progressive Gaussian pyramid training
+fit!(model, elev_norm; steps=1000)
+
+# Predict
+predicted = predict(model, elev_norm)
+```
+
+### WindSIREN: Wind Field Modeling
+
+For 2D vector fields (u, v components):
+
+```julia
+using GeoSurrogates
+
+# Load u and v wind components
+u = normalize(Raster("u_wind.tif"))
+v = normalize(Raster("v_wind.tif"))
+
+# Create and train
+model = WindSurrogate.WindSIREN()
+fit!(model, u, v; steps=1000)
+
+# Predict returns tuple of (u_raster, v_raster)
+u_pred, v_pred = predict(model, template_raster)
+```
+
+### CatSIREN: Categorical Data
+
+For land cover, fuel models, or other categorical rasters:
+
+```julia
+using GeoSurrogates
+
+# Load categorical raster
+veg = Raster("vegetation.tif")
+
+# Create model (automatically determines classes)
+model = CategoricalSIREN.CatSIREN(veg)
+
+# Train
+fit!(model, veg; steps=1000)
+
+# Predict probabilities (Dict per cell)
+probs = predict(model, veg)
+
+# Or get most likely class
+classes = CategoricalSIREN.predict_class(model, veg)
+```
+
+## Tips for Neural Network Training
+
+1. **Always normalize** your data before training neural networks
+2. **Use enough steps** - typically 1000-5000 for good results
+3. **Monitor convergence** - check predictions periodically during training
+4. **Adjust hidden size** - larger `hidden` parameter for more complex data
+
+```julia
+# Custom network architecture
+model = ImplicitTerrain.MLP(
+    hidden = 512,      # More hidden units
+    n_hidden = 4,      # More layers
+    ω0 = 30f0,         # First layer frequency
+    alg = Adam(0.001f0) # Different optimizer
+)
+```

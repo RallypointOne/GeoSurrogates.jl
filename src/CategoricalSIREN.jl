@@ -1,23 +1,11 @@
 module CategoricalSIREN
 
-using ADTypes, Lux, Random, Optimisers, Rasters, DataFrames, ProgressMeter
+using ADTypes, Lux, Random, Optimisers, Rasters, DataFrames
 
-using ..GeoSurrogates: normalize
+using ..GeoSurrogates: normalize, SIRENActivation, init_weight_first, init_weight_hidden, init_bias_zeros
 
 import StatsAPI: predict, fit!
 import DimensionalData as DD
-
-#-----------------------------------------------------------------------------# SIREN Weight Initialization
-# First layer initialization: uniform in [-1/in, 1/in]
-init_weight_first(rng, out, in) = (2rand(rng, Float32, out, in) .- 1) ./ in
-
-# Hidden layer initialization: uniform in [-sqrt(6/in)/ωh, sqrt(6/in)/ωh]
-function init_weight_hidden(rng, out, in)
-    limit = sqrt(6f0 / in)
-    return limit .* (2rand(rng, Float32, out, in) .- 1)
-end
-
-init_bias_zeros(rng, out) = zeros(Float32, out)
 
 #-----------------------------------------------------------------------------# CategoricalSIREN
 """
@@ -67,12 +55,12 @@ struct CatSIREN{T, P, S, TS, C}
                 alg = Adam(0.0001f0),
                 classes = nothing,
             )
-        # Build SIREN layers with softmax output
+        # Build SIREN layers with softmax output using SIRENActivation functor
         layers = [
             # First layer with ω0 scaling
-            Dense(in, hidden, x -> sin(ω0 * x); init_weight = init_weight_first, init_bias = init_bias_zeros),
+            Dense(in, hidden, SIRENActivation(ω0); init_weight = init_weight_first, init_bias = init_bias_zeros),
             # Hidden layers with ωh scaling
-            [Dense(hidden, hidden, x -> sin(ωh * x); init_weight = init_weight_hidden, init_bias = init_bias_zeros) for _ in 2:n_hidden]...,
+            [Dense(hidden, hidden, SIRENActivation(ωh); init_weight = init_weight_hidden, init_bias = init_bias_zeros) for _ in 2:n_hidden]...,
             # Output layer with softmax for probability distribution
             Dense(hidden, n_classes; init_weight = init_weight_hidden, init_bias = init_bias_zeros),
             softmax,
@@ -204,16 +192,14 @@ Train the model on coordinate-value pairs.
 - `x`: 2×N matrix of normalized (x, y) coordinates
 - `y`: n_classes×N one-hot encoded matrix
 
-Returns a vector of loss values (one per step).
+Returns the fitted model.
 """
 function fit!(o::CatSIREN, x::AbstractMatrix, y::AbstractMatrix; steps = 1)
-    losses = Float32[]
     loss_fn = CrossEntropyLoss()
     for _ in 1:steps
-        _, loss, _, _ = Lux.Training.single_train_step!(AutoZygote(), loss_fn, (x, y), o.train_state)
-        push!(losses, loss)
+        Lux.Training.single_train_step!(AutoZygote(), loss_fn, (x, y), o.train_state)
     end
-    return losses
+    return o
 end
 
 """
@@ -222,13 +208,13 @@ end
 Train the model on a categorical raster.
 The raster values should be categorical labels (integers or any comparable type).
 
-Returns a vector of loss values (one per step).
+Returns the fitted model.
 """
 function fit!(o::CatSIREN, r::Raster; steps = 1)
     x = features(r)
     labels = vec(r.data)
     y = onehot(labels, o.classes)
-    fit!(o, x, y; steps=steps)
+    return fit!(o, x, y; steps=steps)
 end
 
 #-----------------------------------------------------------------------------# Constructor from Raster
