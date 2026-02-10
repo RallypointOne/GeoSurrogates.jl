@@ -1,29 +1,25 @@
 project:
-  type: website
+  type: book
   output-dir: _site
 
-website:
+book:
   title: "GeoSurrogates.jl"
-  description: "Implicit Neural Representations for Geospatial Data"
-  repo-url: https://github.com/joshday/GeoSurrogates.jl
+  repo-url: https://github.com/RallypointOne/GeoSurrogates.jl
   repo-actions: [edit, issue]
   navbar:
     left:
-      - href: index.qmd
-        text: Home
-      - href: getting-started.qmd
-        text: Getting Started
-      - href: examples.qmd
-        text: Examples
-      - href: api/index.qmd
-        text: API Reference
+      - text: "GeoSurrogates.jl"
+        href: index.qmd
     right:
       - icon: github
-        href: https://github.com/joshday/GeoSurrogates.jl
-  sidebar:
-    - title: "API Reference"
-      style: "docked"
-      contents:
+        href: https://github.com/RallypointOne/GeoSurrogates.jl
+    search: true
+  chapters:
+    - index.qmd
+    - getting-started.qmd
+    - examples.qmd
+    - part: "API Reference"
+      chapters:
         - api/index.qmd
         - api/classical.qmd
         - api/neural.qmd
