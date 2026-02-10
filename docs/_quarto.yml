@@ -1,8 +1,8 @@
 project:
-  type: book
+  type: website
   output-dir: _site
 
-book:
+website:
   title: "GeoSurrogates.jl"
   repo-url: https://github.com/RallypointOne/GeoSurrogates.jl
   repo-actions: [edit, issue]
@@ -14,15 +14,18 @@ book:
       - icon: github
         href: https://github.com/RallypointOne/GeoSurrogates.jl
     search: true
-  chapters:
-    - index.qmd
-    - getting-started.qmd
-    - examples.qmd
-    - text: "---"
-    - api/index.qmd
-    - api/classical.qmd
-    - api/neural.qmd
-    - api/utilities.qmd
+  sidebar:
+    style: docked
+    contents:
+      - index.qmd
+      - getting-started.qmd
+      - examples.qmd
+      - section: "API Reference"
+        contents:
+          - api/index.qmd
+          - api/classical.qmd
+          - api/neural.qmd
+          - api/utilities.qmd
 
 format:
   html:
