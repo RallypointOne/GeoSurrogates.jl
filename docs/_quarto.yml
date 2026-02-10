@@ -18,12 +18,11 @@ book:
     - index.qmd
     - getting-started.qmd
     - examples.qmd
-    - part: "API Reference"
-      chapters:
-        - api/index.qmd
-        - api/classical.qmd
-        - api/neural.qmd
-        - api/utilities.qmd
+    - text: "---"
+    - api/index.qmd
+    - api/classical.qmd
+    - api/neural.qmd
+    - api/utilities.qmd
 
 format:
   html:
