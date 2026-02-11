@@ -217,8 +217,8 @@ end
 #-----------------------------------------------------------------------------# ImplicitTerrain
 include("ImplicitTerrain.jl")
 
-include("WindSurrogate.jl")
+include("WindSIREN.jl")
 
-include("CategoricalSIREN.jl")
+include("CatSIREN.jl")
 
 end
