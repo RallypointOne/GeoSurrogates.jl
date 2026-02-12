@@ -1,41 +1,38 @@
 project:
-  type: website
+  type: book
   output-dir: _site
 
-website:
+engine: julia
+julia:
+  project: "."
+
+book:
   title: "GeoSurrogates.jl"
-  repo-url: https://github.com/RallypointOne/GeoSurrogates.jl
-  repo-actions: [edit, issue]
   navbar:
-    left:
-      - text: "GeoSurrogates.jl"
-        href: index.qmd
     right:
+      - icon: star
+        href: https://github.com/RallypointOne/GeoSurrogates.jl/stargazers
+        text: "Star"
       - icon: github
         href: https://github.com/RallypointOne/GeoSurrogates.jl
-    search: true
-  sidebar:
-    style: docked
-    contents:
-      - index.qmd
-      - getting-started.qmd
-      - examples.qmd
-      - section: "API Reference"
-        contents:
-          - api/index.qmd
-          - api/classical.qmd
-          - api/neural.qmd
-          - api/utilities.qmd
+  chapters:
+    - part: "Docs"
+      chapters:
+        - index.qmd
+        - getting-started.qmd
+        - examples.qmd
+        - api.qmd
+    - part: "Reference"
+      chapters:
+        - changelog.qmd
+        - coverage.qmd
 
 format:
   html:
+    css: styles.css
+    number-sections: false
     theme:
       light: flatly
       dark: darkly
-    toc: true
-    code-copy: true
-    code-overflow: wrap
-
-execute:
-  freeze: auto
-  daemon: false
+    include-after-body:
+      - file: _version-selector.html

@@ -1,0 +1,5 @@
+[deps]
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+GeoSurrogates = "7068cc40-2035-44e5-a3a1-4a05757b754b"
+LocalCoverage = "5f6e1e16-694c-5876-87ef-16b5274f298e"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"

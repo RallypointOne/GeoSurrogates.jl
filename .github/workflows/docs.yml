@@ -1,67 +1,152 @@
-name: Deploy Documentation
+name: Docs
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    branches:
+      - main
+    tags:
+      - 'v*'
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
-# Allow only one concurrent deployment
 concurrency:
-  group: "pages"
+  group: pages
   cancel-in-progress: false
 
 jobs:
-  build:
+  docs:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - name: Setup Julia
-        uses: julia-actions/setup-julia@v2
-        with:
-          version: '1'  # Latest stable Julia
-
-      - name: Cache Julia packages
-        uses: julia-actions/cache@v2
-
-      - name: Install Julia dependencies
+      # Determine deploy target from ref
+      - name: Set deploy version
+        id: version
         run: |
-          julia --project=. -e '
-            using Pkg
-            Pkg.instantiate()
-            Pkg.add(["Zygote", "QuartoNotebookRunner", "CairoMakie"])
-          '
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/}"
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+            echo "is_release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=dev" >> "$GITHUB_OUTPUT"
+            echo "is_release=false" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Setup Quarto
-        uses: quarto-dev/quarto-actions/setup@v2
-
-      - name: Render Quarto Project
-        run: |
-          export JULIA_PROJECT=${{ github.workspace }}
-          quarto render docs
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      # Build docs
+      - uses: julia-actions/setup-julia@v2
         with:
-          path: docs/_site
+          version: '1'
+      - uses: julia-actions/cache@v2
+      - name: Install docs dependencies
+        run: julia --project=docs -e 'using Pkg; Pkg.develop(path="."); Pkg.instantiate()'
+      - name: Install lcov
+        run: sudo apt-get install -y lcov
+      - uses: quarto-dev/quarto-actions/setup@v2
+      - uses: quarto-dev/quarto-actions/render@v2
+        with:
+          path: docs
 
-  deploy:
-    if: github.ref == 'refs/heads/main'
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      # Deploy to gh-pages branch
+      - name: Deploy to gh-pages
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          IS_RELEASE: ${{ steps.version.outputs.is_release }}
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Clone gh-pages branch or create orphan
+          if git ls-remote --exit-code origin gh-pages; then
+            git clone --branch gh-pages --single-branch "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" gh-pages-deploy
+          else
+            mkdir gh-pages-deploy
+            cd gh-pages-deploy
+            git init
+            git checkout --orphan gh-pages
+            git commit --allow-empty -m "Initialize gh-pages"
+            cd ..
+          fi
+
+          # Copy built docs to version directory
+          rm -rf "gh-pages-deploy/${VERSION}"
+          cp -r docs/_site "gh-pages-deploy/${VERSION}"
+
+          cd gh-pages-deploy
+
+          # If release tag: update versions.json and stable redirect
+          if [ "$IS_RELEASE" = "true" ]; then
+            # Update versions.json
+            if [ -f versions.json ]; then
+              # Add new version and sort by semver descending
+              python3 -c "
+          import json, re
+          with open('versions.json') as f:
+              versions = json.load(f)
+          ver = '${VERSION}'
+          if ver not in versions:
+              versions.append(ver)
+          def semver_key(v):
+              nums = re.findall(r'\d+', v)
+              return tuple(int(n) for n in nums)
+          versions.sort(key=semver_key, reverse=True)
+          with open('versions.json', 'w') as f:
+              json.dump(versions, f, indent=2)
+          "
+            else
+              echo "[\"${VERSION}\"]" > versions.json
+            fi
+
+            # Update stable redirect
+            mkdir -p stable
+            cat > stable/index.html << STABLE_EOF
+          <!DOCTYPE html>
+          <html>
+          <head><meta http-equiv="refresh" content="0; url=/${REPO_NAME}/${VERSION}/"></head>
+          <body>Redirecting to <a href="/${REPO_NAME}/${VERSION}/">latest stable</a>...</body>
+          </html>
+          STABLE_EOF
+          fi
+
+          # Create stable placeholder if no releases yet
+          if [ ! -d stable ]; then
+            mkdir -p stable
+            cat > stable/index.html << PLACEHOLDER_EOF
+          <!DOCTYPE html>
+          <html>
+          <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>No Stable Release Yet</title>
+          <link href="https://cdn.jsdelivr.net/npm/bootstrap@5/dist/css/bootstrap.min.css" rel="stylesheet">
+          </head>
+          <body class="d-flex align-items-center justify-content-center min-vh-100 bg-light">
+          <div class="text-center p-5">
+          <h1 class="mb-3">No Stable Release Yet</h1>
+          <p class="lead text-muted">This package has not published a release.<br>Check out the <a href="/${REPO_NAME}/dev/">development docs</a> instead.</p>
+          </div>
+          </body>
+          </html>
+          PLACEHOLDER_EOF
+          fi
+
+          # Always update root redirect to stable
+          cat > index.html << ROOT_EOF
+          <!DOCTYPE html>
+          <html>
+          <head><meta http-equiv="refresh" content="0; url=/${REPO_NAME}/stable/"></head>
+          <body>Redirecting to <a href="/${REPO_NAME}/stable/">stable docs</a>...</body>
+          </html>
+          ROOT_EOF
+
+          touch .nojekyll
+
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to deploy"
+          else
+            git commit -m "Deploy docs: ${VERSION}"
+            git push "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:gh-pages
+          fi
