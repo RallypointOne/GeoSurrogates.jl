@@ -6,7 +6,9 @@ using ..GeoSurrogates: is_normalized, normalize, SIRENActivation, init_weight_fi
 
 import StatsAPI: predict, fit!
 import DimensionalData as DD
-import RapidRefreshData as RAP
+
+const LOSS_FN = Lux.MSELoss()
+const BACKEND = AutoZygote()
 
 #-----------------------------------------------------------------------------# WindSIREN
 """
@@ -36,7 +38,7 @@ u_pred, v_pred = predict(model, test_raster)
 # References
 - Sitzmann et al. "Implicit Neural Representations with Periodic Activation Functions" (2020)
 """
-struct WindSIREN{T, P, S, TS}
+mutable struct WindSIREN{T, P, S, TS}
     chain::T
     parameters::P
     states::S
@@ -90,7 +92,7 @@ Predict wind components (u, v) for a single coordinate tuple (x, y).
 Returns (u, v) tuple.
 """
 function predict(o::WindSIREN, coords::Tuple)
-    out = predict(o, hcat(collect(Float32, coords)))
+    out = predict(o, Float32[coords[1]; coords[2];;])
     return (out[1], out[2])
 end
 
@@ -116,10 +118,17 @@ Extract normalized (x, y) coordinate features from a raster.
 Returns a 2×N matrix of normalized coordinates.
 """
 function features(r::Raster)
-    df = DataFrame(r)
-    x = normalize(df.X)
-    y = normalize(df.Y)
-    return Float32[x'; y']
+    xs = Float32.(normalize(DD.dims(r, X).val))
+    ys = Float32.(normalize(DD.dims(r, Y).val))
+    nx, ny = length(xs), length(ys)
+    coords = Matrix{Float32}(undef, 2, nx * ny)
+    idx = 1
+    for j in 1:ny, i in 1:nx
+        coords[1, idx] = xs[i]
+        coords[2, idx] = ys[j]
+        idx += 1
+    end
+    return coords
 end
 
 #-----------------------------------------------------------------------------# fit!
@@ -133,9 +142,11 @@ Train the model on coordinate-value pairs.
 Returns the fitted model.
 """
 function fit!(o::WindSIREN, x::AbstractMatrix, y::AbstractMatrix; steps = 1)
+    ts = o.train_state
     for _ in 1:steps
-        Lux.Training.single_train_step!(AutoZygote(), Lux.MSELoss(), (x, y), o.train_state)
+        _, _, _, ts = Lux.Training.single_train_step!(BACKEND, LOSS_FN, (x, y), ts)
     end
+    o.train_state = ts
     return o
 end
 

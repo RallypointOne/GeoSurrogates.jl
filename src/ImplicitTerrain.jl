@@ -1,17 +1,20 @@
 module ImplicitTerrain
 
 using ADTypes, Lux, Random, Optimisers, StyledStrings, Rasters, DataFrames, Images
-using ..GeoSurrogates: is_normalized, normalize, SIRENActivation, init_weight_first, init_weight_hidden, init_bias_zeros
+using ..GeoSurrogates: is_normalized, normalize, _dimstep, SIRENActivation, init_weight_first, init_weight_hidden, init_bias_zeros
 
 import StatsAPI: predict, fit!
 import DimensionalData as DD
+
+const LOSS_FN = Lux.MSELoss()
+const BACKEND = AutoZygote()
 
 #-----------------------------------------------------------------------------# MLP
 mutable struct MLP{T, P, S, TS}
     chain::T
     parameters::P
     states::S
-	train_state::TS
+    train_state::TS
 
     function MLP(;
                 in = 2,
@@ -30,7 +33,7 @@ mutable struct MLP{T, P, S, TS}
         ]
         model = Chain(layers...)
         ps, st = Lux.setup(rng, model)
-		ts = Lux.Training.TrainState(model, ps, st, alg)
+        ts = Lux.Training.TrainState(model, ps, st, alg)
         new{typeof(model), typeof(ps), typeof(st), typeof(ts)}(model, ps, st, ts)
     end
 end
@@ -39,12 +42,12 @@ Base.show(io::IO, M::MIME"text/plain", o::MLP) = print(io, "ImplicitTerrain.MLP"
 
 predict(o::MLP, x::AbstractMatrix) = Lux.apply(o.chain, x, o.train_state.parameters, o.train_state.states)[1]
 
-predict(o::MLP, coords::Tuple) = predict(o, hcat(collect(Float32, coords)))[1]
+predict(o::MLP, coords::Tuple) = predict(o, Float32[coords[1]; coords[2];;])[1]
 
 function predict(o::MLP, r::Raster)
     data = features(r)
-    ẑ = predict(o, data)
-    Raster(reshape(ẑ, size(r)), dims=DD.dims(r))
+    ẑ = predict(o, data)
+    Raster(reshape(ẑ, size(r)), dims=DD.dims(r))
 end
 
 function features(r::Raster)
@@ -66,8 +69,6 @@ end
 #-----------------------------------------------------------------------------# fit!
 function fit!(o::MLP, x::AbstractMatrix, y::AbstractVector; steps = 1, batchsize = nothing)
     ts = o.train_state
-    loss_fn = Lux.MSELoss()
-    backend = AutoZygote()
     n = size(x, 2)
     bs = isnothing(batchsize) ? n : min(batchsize, n)
 
@@ -75,15 +76,16 @@ function fit!(o::MLP, x::AbstractMatrix, y::AbstractVector; steps = 1, batchsize
         # Full-batch training
         y_row = y'
         for _ in 1:steps
-            _, _, _, ts = Lux.Training.single_train_step!(backend, loss_fn, (x, y_row), ts)
+            _, _, _, ts = Lux.Training.single_train_step!(BACKEND, LOSS_FN, (x, y_row), ts)
         end
     else
         # Mini-batch training
+        idxs = Vector{Int}(undef, bs)
         for _ in 1:steps
-            idxs = rand(1:n, bs)
+            rand!(idxs, 1:n)
             x_batch = @view x[:, idxs]
-            y_batch = y[idxs]'
-            _, _, _, ts = Lux.Training.single_train_step!(backend, loss_fn, (x_batch, y_batch), ts)
+            y_batch = reshape(@view(y[idxs]), 1, :)
+            _, _, _, ts = Lux.Training.single_train_step!(BACKEND, LOSS_FN, (x_batch, y_batch), ts)
         end
     end
     o.train_state = ts
@@ -108,9 +110,9 @@ Model() = Model(MLP(), MLP())
 Base.show(io::IO, M::MIME"text/plain", o::Model) = print(io, "ImplicitTerrain.Model")
 
 function predict(o::Model, x)
-    ẑs = predict(o.surface, x)
-    ẑg = predict(o.geometry, x)
-    return ẑs + ẑg
+    ẑs = predict(o.surface, x)
+    ẑg = predict(o.geometry, x)
+    return ẑs + ẑg
 end
 
 #-----------------------------------------------------------------------------# fit!
@@ -138,8 +140,8 @@ end
 # Assumes input raster is normalized
 function _gaussian_pyramid(r::Raster, σ = 4, n = 4, downsample = 2)
     # Preserve dimension ordering (increasing vs decreasing)
-    x_order = step(DD.dims(r, X).val.data) > 0 ? (-1f0, 1f0) : (1f0, -1f0)
-    y_order = step(DD.dims(r, Y).val.data) > 0 ? (-1f0, 1f0) : (1f0, -1f0)
+    x_order = _dimstep(DD.dims(r, X)) > 0 ? (-1f0, 1f0) : (1f0, -1f0)
+    y_order = _dimstep(DD.dims(r, Y)) > 0 ? (-1f0, 1f0) : (1f0, -1f0)
     dims = map(DD.dims(r)) do d
         if DD.Lookups.iscategorical(d)
             return d

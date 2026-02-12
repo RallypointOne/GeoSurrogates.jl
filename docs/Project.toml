@@ -1,5 +1,13 @@
 [deps]
+ArchGDAL = "c9ce4bd3-c3d5-55b8-8973-c0e20141b8c3"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
+GeoInterface = "cf35fbd7-0cd7-5166-be24-54bfbe79505f"
+GeoMakie = "db073c08-6b98-4ee5-b6a4-5efafb3259c6"
 GeoSurrogates = "7068cc40-2035-44e5-a3a1-4a05757b754b"
+Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
 LocalCoverage = "5f6e1e16-694c-5876-87ef-16b5274f298e"
+Rasters = "a3a2b9e3-a471-40c9-b274-f788e487c689"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+StatsModels = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"

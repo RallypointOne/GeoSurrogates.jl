@@ -1,4 +1,4 @@
-module CategoricalSIREN
+module CatSIREN
 
 using ADTypes, Lux, Random, Optimisers, Rasters, DataFrames
 
@@ -7,7 +7,9 @@ using ..GeoSurrogates: normalize, SIRENActivation, init_weight_first, init_weigh
 import StatsAPI: predict, fit!
 import DimensionalData as DD
 
-#-----------------------------------------------------------------------------# CategoricalSIREN
+const BACKEND = AutoZygote()
+
+#-----------------------------------------------------------------------------# CatSIREN
 """
     CatSIREN(n_classes; kwargs...)
 
@@ -38,7 +40,7 @@ probs = predict(model, test_raster)  # Returns raster of probability vectors
 # References
 - Sitzmann et al. "Implicit Neural Representations with Periodic Activation Functions" (2020)
 """
-struct CatSIREN{T, P, S, TS, C}
+mutable struct CatSIREN{T, P, S, TS, C}
     chain::T
     parameters::P
     states::S
@@ -72,7 +74,7 @@ struct CatSIREN{T, P, S, TS, C}
     end
 end
 
-Base.show(io::IO, ::MIME"text/plain", o::CatSIREN) = print(io, "CategoricalSIREN.CatSIREN(n_classes=$(length(o.classes)))")
+Base.show(io::IO, ::MIME"text/plain", o::CatSIREN) = print(io, "CatSIREN.CatSIREN(n_classes=$(length(o.classes)))")
 Base.show(io::IO, o::CatSIREN) = print(io, "CatSIREN($(length(o.classes)))")
 
 #-----------------------------------------------------------------------------# predict
@@ -94,7 +96,7 @@ Predict class probabilities for a single coordinate tuple (x, y).
 Returns a Dict mapping class labels to probabilities.
 """
 function predict(o::CatSIREN, coords::Tuple)
-    out = predict(o, hcat(collect(Float32, coords)))
+    out = predict(o, Float32[coords[1]; coords[2];;])
     probs = vec(out)
     return Dict(o.classes[i] => probs[i] for i in eachindex(o.classes))
 end
@@ -108,8 +110,8 @@ Returns a Raster where each cell contains a Dict mapping class labels to probabi
 function predict(o::CatSIREN, r::Raster)
     data = features(r)
     ŷ = predict(o, data)  # n_classes × N matrix
-    # Convert to vector of Dicts
-    result = [Dict(o.classes[i] => ŷ[i, j] for i in eachindex(o.classes)) for j in axes(ŷ, 2)]
+    classes = o.classes
+    result = [Dict(classes[i] => ŷ[i, j] for i in eachindex(classes)) for j in axes(ŷ, 2)]
     return Raster(reshape(result, size(r)), dims=DD.dims(r))
 end
 
@@ -152,10 +154,17 @@ Extract normalized (x, y) coordinate features from a raster.
 Returns a 2×N matrix of normalized coordinates.
 """
 function features(r::Raster)
-    df = DataFrame(r)
-    x = normalize(df.X)
-    y = normalize(df.Y)
-    return Float32[x'; y']
+    xs = Float32.(normalize(DD.dims(r, X).val))
+    ys = Float32.(normalize(DD.dims(r, Y).val))
+    nx, ny = length(xs), length(ys)
+    coords = Matrix{Float32}(undef, 2, nx * ny)
+    idx = 1
+    for j in 1:ny, i in 1:nx
+        coords[1, idx] = xs[i]
+        coords[2, idx] = ys[j]
+        idx += 1
+    end
+    return coords
 end
 
 #-----------------------------------------------------------------------------# one-hot encoding
@@ -188,11 +197,12 @@ struct CrossEntropyLoss end
 
 function (::CrossEntropyLoss)(model, ps, st, (x, y))
     ŷ, st_new = Lux.apply(model, x, ps, st)
-    # Add small epsilon to avoid log(0)
     ε = 1f-7
-    loss = -sum(y .* log.(ŷ .+ ε)) / size(y, 2)
+    loss = -sum(@. y * log(ŷ + ε)) / size(y, 2)
     return loss, st_new, (;)
 end
+
+const LOSS_CE = CrossEntropyLoss()
 
 #-----------------------------------------------------------------------------# fit!
 """
@@ -205,10 +215,11 @@ Train the model on coordinate-value pairs.
 Returns the fitted model.
 """
 function fit!(o::CatSIREN, x::AbstractMatrix, y::AbstractMatrix; steps = 1)
-    loss_fn = CrossEntropyLoss()
+    ts = o.train_state
     for _ in 1:steps
-        Lux.Training.single_train_step!(AutoZygote(), loss_fn, (x, y), o.train_state)
+        _, _, _, ts = Lux.Training.single_train_step!(BACKEND, LOSS_CE, (x, y), ts)
     end
+    o.train_state = ts
     return o
 end
 

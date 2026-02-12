@@ -9,7 +9,7 @@ import DimensionalData as DD
 
 import StatsAPI: predict, fit!
 
-export ImplicitTerrain, WindSurrogate, CategoricalSIREN, predict, fit!
+export ImplicitTerrain, WindSurrogate, CatSIREN, predict, fit!
 export LinReg, RasterWrap, CategoricalRasterWrap, GeomWrap, normalize, gaussian
 
 
@@ -20,7 +20,7 @@ function normalize(x::AbstractArray{<:Union{Missing, Number}})
     isempty(vals) && return x
     a, b = extrema(vals)
     a == b && return zero(x)  # All values equal → map to 0 (midpoint of [-1, 1])
-    return 2 * (x .- a) ./ (b - a) .- 1
+    return @. 2 * (x - a) / (b - a) - 1
 end
 
 # Fallback does nothing (e.g. for strings)
@@ -81,8 +81,8 @@ end
 function predict(o::LinReg, r::Raster)
     df = DataFrame(r)
     X = modelmatrix(o.formula, df)
-    ẑ = X * o.β
-    Raster(reshape(ẑ, size(r)), dims=DD.dims(r))
+    ẑ = X * o.β
+    Raster(reshape(ẑ, size(r)), dims=DD.dims(r))
 end
 
 
@@ -109,16 +109,23 @@ end
 predict(rw::RasterWrap, coords::Tuple) = rw.f(coords...)
 
 function predict(rw::RasterWrap, r::Raster)
-    ẑ = [predict(rw, pt) for pt in DimPoints(r)]
-    return Raster(reshape(ẑ, size(r)), dims=DD.dims(r))
+    r2 = forwardorder(r)
+    xs = r2.dims[1].val.data
+    ys = r2.dims[2].val.data
+    ẑ = [rw.f(x, y) for x in xs, y in ys]
+    return Raster(ẑ, dims=DD.dims(r2))
 end
 
 GI.crs(o::RasterWrap) = GI.crs(o.raster)
 GI.extent(o::RasterWrap) = GI.extent(o.raster)
 
+_dimstep(d) = _dimstep(d.val.data)
+_dimstep(r::AbstractRange) = step(r)
+_dimstep(v::AbstractVector) = length(v) < 2 ? zero(eltype(v)) : v[2] - v[1]
+
 function forwardorder(r::Raster)
     for (i, dim) in enumerate(r.dims)
-        if step(dim.val.data) < 0
+        if _dimstep(dim) < 0
             r = reverse(r, dims=i)
         end
     end
@@ -152,14 +159,37 @@ GI.crs(o::CategoricalRasterWrap) = GI.crs(o.raster)
 GI.extent(o::CategoricalRasterWrap) = GI.extent(o.raster)
 
 function predict(crw::CategoricalRasterWrap, coords::Tuple)
-    out = Dict(k => predict(gw, coords) for (k, gw) in crw.geomwraps)
-    sumvals = sum(values(out))
-    sumvals == 0 ? out : Dict(k => v / sumvals for (k, v) in out)
+    keys_vec = collect(keys(crw.geomwraps))
+    vals = [predict(crw.geomwraps[k], coords) for k in keys_vec]
+    s = sum(vals)
+    if s != 0
+        vals ./= s
+    end
+    return Dict(keys_vec[i] => vals[i] for i in eachindex(keys_vec))
 end
 
 function predict(crw::CategoricalRasterWrap, r::Raster)
-    ẑ = [predict(crw, pt) for pt in DimPoints(r)]
-    return Raster(reshape(ẑ, size(r)), dims=DD.dims(r))
+    keys_vec = collect(keys(crw.geomwraps))
+    pts = collect(DimPoints(r))
+    n = length(pts)
+    nk = length(keys_vec)
+    # Pre-allocate result matrix: n_classes × n_points
+    result = Matrix{Float64}(undef, nk, n)
+    for (ci, k) in enumerate(keys_vec)
+        gw = crw.geomwraps[k]
+        for (j, pt) in enumerate(pts)
+            result[ci, j] = predict(gw, pt)
+        end
+    end
+    # Normalize columns to sum to 1
+    for j in 1:n
+        s = sum(@view result[:, j])
+        if s != 0
+            @view(result[:, j]) ./= s
+        end
+    end
+    ẑ = [Dict(keys_vec[i] => result[i, j] for i in eachindex(keys_vec)) for j in 1:n]
+    return Raster(reshape(ẑ, size(r)), dims=DD.dims(r))
 end
 
 #-----------------------------------------------------------------------------# GeomWrap
@@ -205,13 +235,14 @@ GI.crs(o::GeomWrap) = GI.crs(o.geometry)
 GI.extent(o::GeomWrap) = GI.extent(o.geometry)
 
 function predict(o::GeomWrap, coords::Tuple)
-    pt = GI.Point(coords)
-    return o.kernel(GO.distance(pt, o.geometry))
+    return o.kernel(GO.distance(GI.Point(coords), o.geometry))
 end
 
 function predict(o::GeomWrap, r::Raster)
-    ẑ = [predict(o, pt) for pt in DimPoints(r)]
-    return Raster(reshape(ẑ, size(r)), dims=DD.dims(r))
+    geom = o.geometry
+    k = o.kernel
+    ẑ = [k(GO.distance(GI.Point(pt), geom)) for pt in DimPoints(r)]
+    return Raster(reshape(ẑ, size(r)), dims=DD.dims(r))
 end
 
 #-----------------------------------------------------------------------------# ImplicitTerrain

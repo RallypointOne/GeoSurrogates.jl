@@ -60,7 +60,7 @@ arrow_xs = xs[1:step:end]
 arrow_ys = ys[1:step:end]
 u_sub = u_data[1:step:end, 1:step:end]
 v_sub = v_data[1:step:end, 1:step:end]
-arrows!(ax3, [x for x in arrow_xs for _ in arrow_ys], [y for _ in arrow_xs for y in arrow_ys],
+arrows2d!(ax3, [x for x in arrow_xs for _ in arrow_ys], [y for _ in arrow_xs for y in arrow_ys],
         vec(u_sub), vec(v_sub), lengthscale=0.15, color=:black)
 fig
 ```
@@ -240,18 +240,12 @@ println("Normalized elevation range: $(extrema(elev_norm))")
 
 # Create and train MLP
 mlp = ImplicitTerrain.MLP(hidden=64, n_hidden=2)  # Smaller network for demo
-fit!(mlp, elev_norm; steps=50)
+fit!(mlp, elev_norm; steps=200)
 
 # Predict
 mlp_predicted = predict(mlp, elev_norm)
 error = mean(abs.(elev_norm .- mlp_predicted))
-println("Mean absolute error after 50 steps: $(round(error, digits=4))")
-
-# Train more
-fit!(mlp, elev_norm; steps=50)
-mlp_predicted = predict(mlp, elev_norm)
-error = mean(abs.(elev_norm .- mlp_predicted))
-println("Mean absolute error after 100 steps: $(round(error, digits=4))")
+println("Mean absolute error after 200 steps: $(round(error, digits=4))")
 ```
 
 ```{julia}
@@ -279,7 +273,7 @@ terrain_model = ImplicitTerrain.Model()
 
 # Fit with progressive Gaussian pyramid training
 # Using minimal steps for demo (normally use 1000+)
-fit!(terrain_model, elev_norm; steps=20)
+fit!(terrain_model, elev_norm; steps=50)
 
 # Predict
 terrain_predicted = predict(terrain_model, elev_norm)
@@ -323,7 +317,7 @@ v_norm = normalize(v_wind)
 
 # Create and train WindSIREN
 wind_model = WindSurrogate.WindSIREN(hidden=64, n_hidden=2)
-fit!(wind_model, u_norm, v_norm; steps=100)
+fit!(wind_model, u_norm, v_norm; steps=200)
 
 # Predict returns tuple of (u_raster, v_raster)
 u_pred, v_pred = predict(wind_model, u_norm)
@@ -346,24 +340,24 @@ println("Expected: u≈0, v≈0 (center of circular flow)")
 fig = Figure(size=(600, 300))
 
 ax1 = Axis(fig[1, 1], title="Original Wind Field", xlabel="X", ylabel="Y", aspect=1)
-arrows!(ax1, [x for x in arrow_xs for _ in arrow_ys], [y for _ in arrow_xs for y in arrow_ys],
+arrows2d!(ax1, [x for x in arrow_xs for _ in arrow_ys], [y for _ in arrow_xs for y in arrow_ys],
         vec(u_sub), vec(v_sub), lengthscale=0.15, color=:black)
 
 ax2 = Axis(fig[1, 2], title="Predicted Wind Field", xlabel="X", ylabel="Y", aspect=1)
 u_pred_sub = Matrix(u_pred)[1:step:end, 1:step:end]
 v_pred_sub = Matrix(v_pred)[1:step:end, 1:step:end]
-arrows!(ax2, [x for x in arrow_xs for _ in arrow_ys], [y for _ in arrow_xs for y in arrow_ys],
+arrows2d!(ax2, [x for x in arrow_xs for _ in arrow_ys], [y for _ in arrow_xs for y in arrow_ys],
         vec(u_pred_sub), vec(v_pred_sub), lengthscale=0.15, color=:black)
 fig
 ```
 
-### CategoricalSIREN.CatSIREN
+### CatSIREN.CatSIREN
 
 SIREN network for categorical/classification tasks with softmax output.
 
 ```{julia}
 # Create CatSIREN from raster (auto-detects classes)
-cat_model = CategoricalSIREN.CatSIREN(veg; hidden=64, n_hidden=2)
+cat_model = CatSIREN.CatSIREN(veg; hidden=64, n_hidden=2)
 println("Detected classes: $(cat_model.classes)")
 
 # Train
@@ -377,13 +371,13 @@ for (k, v) in sort(collect(probs), by=first)
 end
 
 # Predict most likely class
-predicted_class = CategoricalSIREN.predict_class(cat_model, (0.0, 0.0))
+predicted_class = CatSIREN.predict_class(cat_model, (0.0, 0.0))
 actual_class = veg[X=At(0.0), Y=At(0.0)]
 println("\nPredicted class at (0,0): $predicted_class")
 println("Actual class at (0,0): $actual_class")
 
 # Predict classes for full raster
-class_raster = CategoricalSIREN.predict_class(cat_model, veg)
+class_raster = CatSIREN.predict_class(cat_model, veg)
 accuracy = mean(class_raster .== veg)
 println("Overall accuracy: $(round(accuracy * 100, digits=1))%")
 ```

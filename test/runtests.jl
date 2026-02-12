@@ -1,5 +1,5 @@
 using GeoSurrogates
-using RasterDataSources, DataFrames, Rasters, ArchGDAL, Zygote, ProgressMeter
+using RasterDataSources, DataFrames, Rasters, ArchGDAL, Zygote
 using Test
 using StatsAPI: predict, fit!
 

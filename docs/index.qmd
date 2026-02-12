@@ -54,7 +54,7 @@ predicted = predict(model, new_raster)
 | `GeomWrap` | Distance-based kernel | Geometry influence fields |
 | `ImplicitTerrain.Model` | Cascaded SIREN | Terrain compression |
 | `WindSurrogate.WindSIREN` | SIREN for vectors | Wind field modeling |
-| `CategoricalSIREN.CatSIREN` | SIREN with softmax | Categorical classification |
+| `CatSIREN.CatSIREN` | SIREN with softmax | Categorical classification |
 
 ## References
 

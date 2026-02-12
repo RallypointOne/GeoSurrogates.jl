@@ -145,7 +145,7 @@ using GeoSurrogates
 veg = Raster("vegetation.tif")
 
 # Create model (automatically determines classes)
-model = CategoricalSIREN.CatSIREN(veg)
+model = CatSIREN.CatSIREN(veg)
 
 # Train
 fit!(model, veg; steps=1000)
@@ -154,7 +154,7 @@ fit!(model, veg; steps=1000)
 probs = predict(model, veg)
 
 # Or get most likely class
-classes = CategoricalSIREN.predict_class(model, veg)
+classes = CatSIREN.predict_class(model, veg)
 ```
 
 ## Tips for Neural Network Training

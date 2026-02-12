@@ -1,3 +1,8 @@
+.cell-output-display img {
+    max-width: 100%;
+    height: auto;
+}
+
 .sidebar-item-section {
     margin-top: 2rem !important;
 }

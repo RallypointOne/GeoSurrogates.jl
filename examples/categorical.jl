@@ -79,7 +79,7 @@ display(fig_orig)
 
 #-----------------------------------------------------------------------------# Create and train CatSIREN
 @info "Creating CatSIREN model..."
-model = GeoSurrogates.CategoricalSIREN.CatSIREN(r;
+model = GeoSurrogates.CatSIREN.CatSIREN(r;
     hidden = 128,
     n_hidden = 3,
     ω0 = 30f0,
@@ -102,7 +102,7 @@ eval_steps = Int[]
     append!(losses, chunk_losses)
 
     # Compute accuracy on training data
-    pred_classes = GeoSurrogates.CategoricalSIREN.predict_class(model, r)
+    pred_classes = GeoSurrogates.CatSIREN.predict_class(model, r)
     correct = sum(skipmissing(pred_classes.data .== r.data))
     total = sum(.!ismissing.(r.data))
     push!(accuracies, correct / total)
@@ -132,12 +132,12 @@ display(fig_loss)
 @info "Generating predictions..."
 
 # Predict class labels
-pred_classes = GeoSurrogates.CategoricalSIREN.predict_class(model, r)
+pred_classes = GeoSurrogates.CatSIREN.predict_class(model, r)
 
 # Predict at higher resolution (use original raster at finer resolution)
 step_hires = max(1, step_x ÷ 2)
 r_hires = r_full[1:step_hires:end, 1:step_hires:end]
-pred_hires = GeoSurrogates.CategoricalSIREN.predict_class(model, r_hires)
+pred_hires = GeoSurrogates.CatSIREN.predict_class(model, r_hires)
 
 #-----------------------------------------------------------------------------# Visualize comparison
 @info "Creating comparison visualization..."
