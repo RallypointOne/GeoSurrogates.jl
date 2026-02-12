@@ -1,0 +1,1 @@
+genhtml -t 'on branch main' -o /home/runner/work/GeoSurrogates.jl/GeoSurrogates.jl/docs/_site/coverage coverage/lcov.info

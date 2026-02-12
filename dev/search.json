@@ -1,0 +1,211 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "GeoSurrogates.jl",
+    "section": "",
+    "text": "Overview\nGeoSurrogates.jl is a Julia package for creating surrogate models of geospatial data. It provides multiple approaches to learn continuous functions from spatial raster data, leveraging both classical methods and neural networks to create compact, efficient representations of geographic phenomena.",
+    "crumbs": [
+      "Docs",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>GeoSurrogates.jl</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#features",
+    "href": "index.html#features",
+    "title": "GeoSurrogates.jl",
+    "section": "Features",
+    "text": "Features\n\nClassical Surrogates: Linear regression, interpolation-based wrapping, and kernel smoothing\nNeural Network Surrogates: SIREN (Sinusoidal Representation Networks) for terrain, wind fields, and categorical data\nSeamless Integration: Works with the Rasters.jl ecosystem\nArbitrary Resolution: Predict at any resolution, not just the training resolution\nMemory Efficient: Neural networks as compact alternatives to storing full rasters",
+    "crumbs": [
+      "Docs",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>GeoSurrogates.jl</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#installation",
+    "href": "index.html#installation",
+    "title": "GeoSurrogates.jl",
+    "section": "Installation",
+    "text": "Installation\nusing Pkg\nPkg.add(\"GeoSurrogates\")",
+    "crumbs": [
+      "Docs",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>GeoSurrogates.jl</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#quick-example",
+    "href": "index.html#quick-example",
+    "title": "GeoSurrogates.jl",
+    "section": "Quick Example",
+    "text": "Quick Example\nusing GeoSurrogates, Rasters\n\n# Load a raster\nelev = Raster(\"path/to/elevation.tif\")\n\n# Create a simple interpolation-based surrogate\nsurrogate = RasterWrap(elev)\n\n# Predict at any coordinate\npredict(surrogate, (-105.5, 40.2))\n\n# Or create a neural network surrogate for compression\nmodel = ImplicitTerrain.Model()\nfit!(model, normalize(elev); steps=1000)\n\n# Predict on a new raster grid\npredicted = predict(model, new_raster)",
+    "crumbs": [
+      "Docs",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>GeoSurrogates.jl</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#surrogate-types",
+    "href": "index.html#surrogate-types",
+    "title": "GeoSurrogates.jl",
+    "section": "Surrogate Types",
+    "text": "Surrogate Types\n\n\n\n\n\n\n\n\nType\nDescription\nUse Case\n\n\n\n\nLinReg\nLinear regression\nSimple trend modeling\n\n\nRasterWrap\nB-spline interpolation\nFast exact interpolation\n\n\nCategoricalRasterWrap\nKernel smoothing\nCategorical data\n\n\nGeomWrap\nDistance-based kernel\nGeometry influence fields\n\n\nImplicitTerrain.Model\nCascaded SIREN\nTerrain compression\n\n\nWindSurrogate.WindSIREN\nSIREN for vectors\nWind field modeling\n\n\nCatSIREN.CatSIREN\nSIREN with softmax\nCategorical classification",
+    "crumbs": [
+      "Docs",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>GeoSurrogates.jl</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#references",
+    "href": "index.html#references",
+    "title": "GeoSurrogates.jl",
+    "section": "References",
+    "text": "References\n\nSitzmann et al. “Implicit Neural Representations with Periodic Activation Functions” (2020)\nImplicitTerrain paper: https://arxiv.org/abs/2406.00227",
+    "crumbs": [
+      "Docs",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>GeoSurrogates.jl</span>"
+    ]
+  },
+  {
+    "objectID": "getting-started.html",
+    "href": "getting-started.html",
+    "title": "Getting Started",
+    "section": "",
+    "text": "Installation\nGeoSurrogates.jl can be installed using Julia’s package manager:",
+    "crumbs": [
+      "Docs",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Getting Started</span>"
+    ]
+  },
+  {
+    "objectID": "getting-started.html#installation",
+    "href": "getting-started.html#installation",
+    "title": "Getting Started",
+    "section": "",
+    "text": "using Pkg\nPkg.add(\"GeoSurrogates\")",
+    "crumbs": [
+      "Docs",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Getting Started</span>"
+    ]
+  },
+  {
+    "objectID": "getting-started.html#basic-concepts",
+    "href": "getting-started.html#basic-concepts",
+    "title": "Getting Started",
+    "section": "Basic Concepts",
+    "text": "Basic Concepts\n\nWhat is a GeoSurrogate?\nA GeoSurrogate is a function that approximates geospatial data. Given coordinates (x, y), it returns a predicted value. All surrogates in this package implement the predict function from StatsAPI:\npredict(surrogate, (x, y))        # Single point\npredict(surrogate, raster)        # Entire raster grid\n\n\nNormalization\nNeural network surrogates require data to be normalized to the range [-1, 1]. Use the normalize function:\nusing GeoSurrogates\n\n# Normalize a raster (data and coordinates)\nr_norm = normalize(raster)\n\n# Check if data is normalized\nis_normalized(r_norm)  # true",
+    "crumbs": [
+      "Docs",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Getting Started</span>"
+    ]
+  },
+  {
+    "objectID": "getting-started.html#classical-surrogates",
+    "href": "getting-started.html#classical-surrogates",
+    "title": "Getting Started",
+    "section": "Classical Surrogates",
+    "text": "Classical Surrogates\n\nRasterWrap: Interpolation\nThe simplest surrogate wraps a raster with B-spline interpolation:\nusing GeoSurrogates, Rasters\n\n# Load your raster\nelev = Raster(\"elevation.tif\")\n\n# Create interpolation surrogate\nrw = RasterWrap(elev)\n\n# Predict at any coordinate within the raster extent\nvalue = predict(rw, (-105.5, 40.2))\n\n# Predict on a different grid\nnew_grid = Raster(zeros(100, 100), dims=(X(-106:-105), Y(40:41)))\npredicted = predict(rw, new_grid)\n\n\nLinReg: Linear Regression\nFor simple trend modeling:\n# Fit a linear model: z ~ 1 + X * Y\nmodel = LinReg(elev)\n\n# Or with a custom formula\nusing StatsModels\nmodel = LinReg(elev, @formula(layer1 ~ 1 + X + Y + X^2 + Y^2))\n\npredict(model, (-105.5, 40.2))\n\n\nGeomWrap: Geometry Influence\nModel the influence of geometric features (points, lines, polygons):\nusing GeoInterface\n\n# Create a geometry\npolygon = GeoInterface.Polygon(...)\n\n# Wrap it as a surrogate\ngw = GeomWrap(polygon; kernel=Base.Fix2(gaussian, 4))\n\n# Points inside/near the geometry have values close to 1\n# Points far away have values close to 0\npredict(gw, (x, y))",
+    "crumbs": [
+      "Docs",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Getting Started</span>"
+    ]
+  },
+  {
+    "objectID": "getting-started.html#neural-network-surrogates",
+    "href": "getting-started.html#neural-network-surrogates",
+    "title": "Getting Started",
+    "section": "Neural Network Surrogates",
+    "text": "Neural Network Surrogates\n\nImplicitTerrain: Terrain Modeling\nFor high-quality terrain compression using cascaded SIREN networks:\nusing GeoSurrogates\n\n# Load and normalize terrain data\nelev = Raster(\"elevation.tif\")\nelev_norm = normalize(elev)\n\n# Create the model (two cascaded MLPs)\nmodel = ImplicitTerrain.Model()\n\n# Fit with progressive Gaussian pyramid training\nfit!(model, elev_norm; steps=1000)\n\n# Predict\npredicted = predict(model, elev_norm)\n\n\nWindSIREN: Wind Field Modeling\nFor 2D vector fields (u, v components):\nusing GeoSurrogates\n\n# Load u and v wind components\nu = normalize(Raster(\"u_wind.tif\"))\nv = normalize(Raster(\"v_wind.tif\"))\n\n# Create and train\nmodel = WindSurrogate.WindSIREN()\nfit!(model, u, v; steps=1000)\n\n# Predict returns tuple of (u_raster, v_raster)\nu_pred, v_pred = predict(model, template_raster)\n\n\nCatSIREN: Categorical Data\nFor land cover, fuel models, or other categorical rasters:\nusing GeoSurrogates\n\n# Load categorical raster\nveg = Raster(\"vegetation.tif\")\n\n# Create model (automatically determines classes)\nmodel = CatSIREN.CatSIREN(veg)\n\n# Train\nfit!(model, veg; steps=1000)\n\n# Predict probabilities (Dict per cell)\nprobs = predict(model, veg)\n\n# Or get most likely class\nclasses = CatSIREN.predict_class(model, veg)",
+    "crumbs": [
+      "Docs",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Getting Started</span>"
+    ]
+  },
+  {
+    "objectID": "getting-started.html#tips-for-neural-network-training",
+    "href": "getting-started.html#tips-for-neural-network-training",
+    "title": "Getting Started",
+    "section": "Tips for Neural Network Training",
+    "text": "Tips for Neural Network Training\n\nAlways normalize your data before training neural networks\nUse enough steps - typically 1000-5000 for good results\nMonitor convergence - check predictions periodically during training\nAdjust hidden size - larger hidden parameter for more complex data\n\n# Custom network architecture\nmodel = ImplicitTerrain.MLP(\n    hidden = 512,      # More hidden units\n    n_hidden = 4,      # More layers\n    ω0 = 30f0,         # First layer frequency\n    alg = Adam(0.001f0) # Different optimizer\n)",
+    "crumbs": [
+      "Docs",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Getting Started</span>"
+    ]
+  },
+  {
+    "objectID": "examples.html",
+    "href": "examples.html",
+    "title": "Examples",
+    "section": "",
+    "text": "Setup\nThis page provides runnable examples for every surrogate type in GeoSurrogates.jl.\nFirst, let’s load the packages and create some sample data to work with.\nusing GeoSurrogates\nusing Rasters\nusing DimensionalData\nusing Statistics\nusing Zygote  # Required for neural network training\nusing CairoMakie  # For plotting\n\n# Create sample elevation data (a simple hill)\n# Using 51 points so that 0.0 is exactly on the grid\nxs = range(-1, 1, length=51)\nys = range(-1, 1, length=51)\nelevation_data = [exp(-(x^2 + y^2)) for x in xs, y in ys]\nelev = Raster(elevation_data, (X(xs), Y(ys)))\n\n# Create sample categorical data (3 classes based on elevation)\ncat_data = map(elevation_data) do v\n    v &lt; 0.3 ? 1 : v &lt; 0.7 ? 2 : 3\nend\nveg = Raster(cat_data, (X(xs), Y(ys)))\n\n# Create sample wind data (circular flow)\nu_data = [-y for x in xs, y in ys]\nv_data = [x for x in xs, y in ys]\nu_wind = Raster(u_data, (X(xs), Y(ys)))\nv_wind = Raster(v_data, (X(xs), Y(ys)))\n\nprintln(\"Sample data created (51x51 grids with 0.0 on grid):\")\nprintln(\"  elev: $(size(elev)) elevation raster\")\nprintln(\"  veg:  $(size(veg)) categorical raster (classes: $(sort(unique(veg))))\")\nprintln(\"  u_wind, v_wind: $(size(u_wind)) wind component rasters\")\n\n\nPrecompiling packages...\n   2026.0 ms  ✓ QuartoNotebookWorkerTablesExt (serial)\n  1 dependency successfully precompiled in 2 seconds\nPrecompiling packages...\n   1091.4 ms  ✓ QuartoNotebookWorkerLaTeXStringsExt (serial)\n  1 dependency successfully precompiled in 1 seconds\nPrecompiling packages...\n   1165.2 ms  ✓ QuartoNotebookWorkerJSONExt (serial)\n  1 dependency successfully precompiled in 1 seconds\nPrecompiling packages...\n   6616.4 ms  ✓ QuartoNotebookWorkerMakieExt (serial)\n  1 dependency successfully precompiled in 7 seconds\nPrecompiling packages...\n   5653.1 ms  ✓ QuartoNotebookWorkerCairoMakieExt (serial)\n  1 dependency successfully precompiled in 6 seconds\nSample data created (51x51 grids with 0.0 on grid):\n  elev: (51, 51) elevation raster\n  veg:  (51, 51) categorical raster (classes: [1, 2, 3])\n  u_wind, v_wind: (51, 51) wind component rasters\nfig = Figure(size=(900, 300))\nax1 = Axis(fig[1, 1], title=\"Elevation\", xlabel=\"X\", ylabel=\"Y\", aspect=1)\nheatmap!(ax1, collect(xs), collect(ys), elevation_data, colormap=:viridis)\n\nax2 = Axis(fig[1, 2], title=\"Vegetation Classes\", xlabel=\"X\", ylabel=\"Y\", aspect=1)\nheatmap!(ax2, collect(xs), collect(ys), cat_data, colormap=:Set1_3)\n\nax3 = Axis(fig[1, 3], title=\"Wind Field\", xlabel=\"X\", ylabel=\"Y\", aspect=1)\n# Subsample for arrow visibility\nstep = 5\narrow_xs = xs[1:step:end]\narrow_ys = ys[1:step:end]\nu_sub = u_data[1:step:end, 1:step:end]\nv_sub = v_data[1:step:end, 1:step:end]\narrows2d!(ax3, [x for x in arrow_xs for _ in arrow_ys], [y for _ in arrow_xs for y in arrow_ys],\n        vec(u_sub), vec(v_sub), lengthscale=0.15, color=:black)\nfig\n\n\n\n\n\n\nFigure 3.1: Sample data: elevation (left), vegetation classes (center), wind field (right)",
+    "crumbs": [
+      "Docs",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Examples</span>"
+    ]
+  },
+  {
+    "objectID": "examples.html#classical-surrogates",
+    "href": "examples.html#classical-surrogates",
+    "title": "Examples",
+    "section": "Classical Surrogates",
+    "text": "Classical Surrogates\n\nLinReg\nLinear regression surrogate for simple trend modeling.\n\nusing StatsModels\n\n# Fit a quadratic model\nlinreg_model = LinReg(elev, @formula(layer1 ~ 1 + X + Y + X^2 + Y^2))\n\n# Predict at a single point\nval = predict(linreg_model, (0.0, 0.0))\nprintln(\"Prediction at (0, 0): $val\")\n\n# Predict on the full raster\nlinreg_predicted = predict(linreg_model, elev)\nerror = mean(abs.(elev .- linreg_predicted))\nprintln(\"Mean absolute error: $(round(error, digits=4))\")\n\nPrediction at (0, 0): 0.8845363740022153\nMean absolute error: 0.0407\n\n\n\nfig = Figure(size=(900, 300))\nax1 = Axis(fig[1, 1], title=\"Original\", xlabel=\"X\", ylabel=\"Y\", aspect=1)\nhm1 = heatmap!(ax1, collect(xs), collect(ys), elevation_data, colormap=:viridis)\nColorbar(fig[1, 1][1, 2], hm1)\n\nax2 = Axis(fig[1, 2], title=\"LinReg Prediction\", xlabel=\"X\", ylabel=\"Y\", aspect=1)\nhm2 = heatmap!(ax2, collect(xs), collect(ys), Matrix(linreg_predicted), colormap=:viridis)\nColorbar(fig[1, 2][1, 2], hm2)\n\nax3 = Axis(fig[1, 3], title=\"Absolute Error\", xlabel=\"X\", ylabel=\"Y\", aspect=1)\nhm3 = heatmap!(ax3, collect(xs), collect(ys), abs.(elevation_data .- Matrix(linreg_predicted)), colormap=:Reds)\nColorbar(fig[1, 3][1, 2], hm3)\nfig\n\n\n\n\n\n\nFigure 3.2: LinReg: Original elevation (left) vs quadratic fit (center) and error (right)\n\n\n\n\n\n\nRasterWrap\nInterpolation-based surrogate using B-splines. Provides exact interpolation at grid points.\n\nusing Interpolations\n\n# Create interpolation wrapper (default: linear B-spline)\nrw = RasterWrap(elev)\n\n# Predict at grid points (exact)\noriginal_val = elev[X=At(0.0), Y=At(0.0)]\npredicted_val = predict(rw, (0.0, 0.0))\nprintln(\"Original value at (0,0): $original_val\")\nprintln(\"Predicted value at (0,0): $predicted_val\")\n\n# Predict at off-grid point (interpolated)\noffgrid_val = predict(rw, (0.01, 0.01))\nprintln(\"Interpolated value at (0.01, 0.01): $(round(offgrid_val, digits=4))\")\n\n# Predict on a finer grid\nfine_xs = range(-1, 1, length=100)\nfine_ys = range(-1, 1, length=100)\nfine_raster = Raster(zeros(100, 100), (X(fine_xs), Y(fine_ys)))\nupsampled = predict(rw, fine_raster)\nprintln(\"Upsampled from $(size(elev)) to $(size(upsampled))\")\n\nOriginal value at (0,0): 1.0\nPredicted value at (0,0): 1.0\nInterpolated value at (0.01, 0.01): 0.9992\nUpsampled from (51, 51) to (100, 100)\n\n\n\nfig = Figure(size=(600, 300))\nax1 = Axis(fig[1, 1], title=\"Original (51x51)\", xlabel=\"X\", ylabel=\"Y\", aspect=1)\nhm1 = heatmap!(ax1, collect(xs), collect(ys), elevation_data, colormap=:viridis)\nColorbar(fig[1, 1][1, 2], hm1)\n\nax2 = Axis(fig[1, 2], title=\"Upsampled (100x100)\", xlabel=\"X\", ylabel=\"Y\", aspect=1)\nhm2 = heatmap!(ax2, collect(fine_xs), collect(fine_ys), Matrix(upsampled), colormap=:viridis)\nColorbar(fig[1, 2][1, 2], hm2)\nfig\n\n\n\n\n\n\nFigure 3.3: RasterWrap: Original 51x51 grid (left) upsampled to 100x100 (right)\n\n\n\n\n\n\nCategoricalRasterWrap\nKernel smoothing surrogate for categorical data. Returns probability distributions over classes.\n\n# Create categorical wrapper\ncrw = CategoricalRasterWrap(veg)\n\n# Predict probabilities at center (should favor class 3 - highest elevation)\nprobs = predict(crw, (0.0, 0.0))\nprintln(\"Class probabilities at (0, 0):\")\nfor (k, v) in sort(collect(probs), by=first)\n    println(\"  Class $k: $(round(v, digits=3))\")\nend\n\n# Predict at edge (should favor class 1 - lowest elevation)\nprobs_edge = predict(crw, (0.9, 0.9))\nprintln(\"\\nClass probabilities at (0.9, 0.9):\")\nfor (k, v) in sort(collect(probs_edge), by=first)\n    println(\"  Class $k: $(round(v, digits=3))\")\nend\n\nClass probabilities at (0, 0):\n  Class 1: 0.0\n  Class 2: 0.053\n  Class 3: 0.947\n\nClass probabilities at (0.9, 0.9):\n  Class 1: 0.568\n  Class 2: 0.418\n  Class 3: 0.014\n\n\n\nfig = Figure(size=(400, 350))\nax = Axis(fig[1, 1], title=\"Vegetation Classes\", xlabel=\"X\", ylabel=\"Y\", aspect=1)\nhm = heatmap!(ax, collect(xs), collect(ys), cat_data, colormap=:Set1_3)\nColorbar(fig[1, 2], hm, label=\"Class\", ticks=1:3)\nfig\n\n\n\n\n\n\nFigure 3.4: CategoricalRasterWrap: Categorical vegetation classes\n\n\n\n\n\n\nGeomWrap\nGeometry-based surrogate using distance kernels. Points near the geometry have values close to 1.\n\nimport GeoInterface as GI\n\n# Create a point geometry at the origin\npt = GI.Point(0.0, 0.0)\ngw = GeomWrap(pt)\n\n# Predict at the point itself\nval_at_point = predict(gw, (0.0, 0.0))\nprintln(\"Value at geometry: $val_at_point\")\n\n# Predict at increasing distances\nfor dist in [0.1, 0.25, 0.5, 1.0]\n    val = predict(gw, (dist, 0.0))\n    println(\"Value at distance $dist: $(round(val, digits=4))\")\nend\n\n# Create influence raster\ninfluence = predict(gw, elev)\nprintln(\"\\nInfluence raster range: $(round(minimum(influence), digits=4)) to $(round(maximum(influence), digits=4))\")\n\nValue at geometry: 1.0\nValue at distance 0.1: 0.9231\nValue at distance 0.25: 0.6065\nValue at distance 0.5: 0.1353\nValue at distance 1.0: 0.0003\n\nInfluence raster range: 0.0 to 1.0\n\n\n\nfig = Figure(size=(400, 350))\nax = Axis(fig[1, 1], title=\"Influence from Point at Origin\", xlabel=\"X\", ylabel=\"Y\", aspect=1)\nhm = heatmap!(ax, collect(xs), collect(ys), Matrix(influence), colormap=:YlOrRd)\nscatter!(ax, [0.0], [0.0], color=:blue, markersize=15, marker=:star5)\nColorbar(fig[1, 2], hm, label=\"Influence\")\nfig\n\n\n\n\n\n\nFigure 3.5: GeomWrap: Distance-based influence from a point at the origin",
+    "crumbs": [
+      "Docs",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Examples</span>"
+    ]
+  },
+  {
+    "objectID": "examples.html#neural-network-surrogates",
+    "href": "examples.html#neural-network-surrogates",
+    "title": "Examples",
+    "section": "Neural Network Surrogates",
+    "text": "Neural Network Surrogates\nNeural network surrogates require normalized data (values in [-1, 1]).\n\nImplicitTerrain.MLP\nSingle SIREN network for scalar field approximation.\n\n# Normalize the elevation data\nelev_norm = normalize(elev)\nprintln(\"Normalized elevation range: $(extrema(elev_norm))\")\n\n# Create and train MLP\nmlp = ImplicitTerrain.MLP(hidden=64, n_hidden=2)  # Smaller network for demo\nfit!(mlp, elev_norm; steps=200)\n\n# Predict\nmlp_predicted = predict(mlp, elev_norm)\nerror = mean(abs.(elev_norm .- mlp_predicted))\nprintln(\"Mean absolute error after 200 steps: $(round(error, digits=4))\")\n\nNormalized elevation range: (-1.0, 1.0)\nMean absolute error after 200 steps: 0.2551\n\n\n\nfig = Figure(size=(600, 300))\nax1 = Axis(fig[1, 1], title=\"Original (Normalized)\", xlabel=\"X\", ylabel=\"Y\", aspect=1)\nhm1 = heatmap!(ax1, collect(xs), collect(ys), Matrix(elev_norm), colormap=:viridis)\nColorbar(fig[1, 1][1, 2], hm1)\n\nax2 = Axis(fig[1, 2], title=\"MLP Prediction\", xlabel=\"X\", ylabel=\"Y\", aspect=1)\nhm2 = heatmap!(ax2, collect(xs), collect(ys), Matrix(mlp_predicted), colormap=:viridis)\nColorbar(fig[1, 2][1, 2], hm2)\nfig\n\n\n\n\n\n\nFigure 3.6: ImplicitTerrain.MLP: Original normalized elevation (left) vs neural network prediction (right)\n\n\n\n\n\n\nImplicitTerrain.Model\nCascaded SIREN with surface and geometry components, trained progressively.\n\n# Create the cascaded model\nterrain_model = ImplicitTerrain.Model()\n\n# Fit with progressive Gaussian pyramid training\n# Using minimal steps for demo (normally use 1000+)\nfit!(terrain_model, elev_norm; steps=50)\n\n# Predict\nterrain_predicted = predict(terrain_model, elev_norm)\nerror = mean(abs.(elev_norm .- terrain_predicted))\nprintln(\"Mean absolute error: $(round(error, digits=4))\")\n\n# The model combines surface (broad features) + geometry (fine details)\nsurface_pred = predict(terrain_model.surface, elev_norm)\ngeometry_pred = predict(terrain_model.geometry, elev_norm)\nprintln(\"Surface contribution range: $(round.(extrema(surface_pred), digits=3))\")\nprintln(\"Geometry contribution range: $(round.(extrema(geometry_pred), digits=3))\")\n\n\n[ Info: Fitting surface model on pyramid level 1/3 with size (6, 6)\n[ Info: Fitting surface model on pyramid level 2/3 with size (12, 12)\n[ Info: Fitting surface model on pyramid level 3/3 with size (25, 25)\n┌ Info: Fitting geometry model on residuals with size (51, 51)\n└   residual_range = (-0.71935254f0, 0.619012f0)\nMean absolute error: 0.1712\nSurface contribution range: (-1.174f0, 1.197f0)\nGeometry contribution range: (-0.468f0, 0.369f0)\n\n\n\n\n\nfig = Figure(size=(900, 300))\nax1 = Axis(fig[1, 1], title=\"Surface Component\", xlabel=\"X\", ylabel=\"Y\", aspect=1)\nhm1 = heatmap!(ax1, collect(xs), collect(ys), Matrix(surface_pred), colormap=:viridis)\nColorbar(fig[1, 1][1, 2], hm1)\n\nax2 = Axis(fig[1, 2], title=\"Geometry Component\", xlabel=\"X\", ylabel=\"Y\", aspect=1)\nhm2 = heatmap!(ax2, collect(xs), collect(ys), Matrix(geometry_pred), colormap=:viridis)\nColorbar(fig[1, 2][1, 2], hm2)\n\nax3 = Axis(fig[1, 3], title=\"Combined Prediction\", xlabel=\"X\", ylabel=\"Y\", aspect=1)\nhm3 = heatmap!(ax3, collect(xs), collect(ys), Matrix(terrain_predicted), colormap=:viridis)\nColorbar(fig[1, 3][1, 2], hm3)\nfig\n\n\n\n\n\n\nFigure 3.7: ImplicitTerrain.Model: Surface component (left), geometry component (center), combined prediction (right)\n\n\n\n\n\n\nWindSurrogate.WindSIREN\nSIREN network for 2D vector fields (u, v wind components).\n\n# Normalize wind components\nu_norm = normalize(u_wind)\nv_norm = normalize(v_wind)\n\n# Create and train WindSIREN\nwind_model = WindSurrogate.WindSIREN(hidden=64, n_hidden=2)\nfit!(wind_model, u_norm, v_norm; steps=200)\n\n# Predict returns tuple of (u_raster, v_raster)\nu_pred, v_pred = predict(wind_model, u_norm)\n\nu_error = mean(abs.(u_norm .- u_pred))\nv_error = mean(abs.(v_norm .- v_pred))\nprintln(\"U component MAE: $(round(u_error, digits=4))\")\nprintln(\"V component MAE: $(round(v_error, digits=4))\")\n\n# Predict at single point\nu_val, v_val = predict(wind_model, (0.0, 0.0))\nprintln(\"\\nWind at (0, 0): u=$(round(u_val, digits=3)), v=$(round(v_val, digits=3))\")\nprintln(\"Expected: u≈0, v≈0 (center of circular flow)\")\n\nU component MAE: 0.2969\nV component MAE: 0.2849\n\nWind at (0, 0): u=-0.125, v=0.071\nExpected: u≈0, v≈0 (center of circular flow)\n\n\n\nfig = Figure(size=(600, 300))\n\nax1 = Axis(fig[1, 1], title=\"Original Wind Field\", xlabel=\"X\", ylabel=\"Y\", aspect=1)\narrows2d!(ax1, [x for x in arrow_xs for _ in arrow_ys], [y for _ in arrow_xs for y in arrow_ys],\n        vec(u_sub), vec(v_sub), lengthscale=0.15, color=:black)\n\nax2 = Axis(fig[1, 2], title=\"Predicted Wind Field\", xlabel=\"X\", ylabel=\"Y\", aspect=1)\nu_pred_sub = Matrix(u_pred)[1:step:end, 1:step:end]\nv_pred_sub = Matrix(v_pred)[1:step:end, 1:step:end]\narrows2d!(ax2, [x for x in arrow_xs for _ in arrow_ys], [y for _ in arrow_xs for y in arrow_ys],\n        vec(u_pred_sub), vec(v_pred_sub), lengthscale=0.15, color=:black)\nfig\n\n\n\n\n\n\nFigure 3.8: WindSIREN: Original wind field (left) vs predicted wind field (right)\n\n\n\n\n\n\nCatSIREN.CatSIREN\nSIREN network for categorical/classification tasks with softmax output.\n\n# Create CatSIREN from raster (auto-detects classes)\ncat_model = CatSIREN.CatSIREN(veg; hidden=64, n_hidden=2)\nprintln(\"Detected classes: $(cat_model.classes)\")\n\n# Train\nfit!(cat_model, veg; steps=100)\n\n# Predict probabilities at center\nprobs = predict(cat_model, (0.0, 0.0))\nprintln(\"\\nPredicted probabilities at (0, 0):\")\nfor (k, v) in sort(collect(probs), by=first)\n    println(\"  Class $k: $(round(v, digits=3))\")\nend\n\n# Predict most likely class\npredicted_class = CatSIREN.predict_class(cat_model, (0.0, 0.0))\nactual_class = veg[X=At(0.0), Y=At(0.0)]\nprintln(\"\\nPredicted class at (0,0): $predicted_class\")\nprintln(\"Actual class at (0,0): $actual_class\")\n\n# Predict classes for full raster\nclass_raster = CatSIREN.predict_class(cat_model, veg)\naccuracy = mean(class_raster .== veg)\nprintln(\"Overall accuracy: $(round(accuracy * 100, digits=1))%\")\n\nDetected classes: [1, 2, 3]\n\nPredicted probabilities at (0, 0):\n  Class 1: 0.176\n  Class 2: 0.361\n  Class 3: 0.463\n\nPredicted class at (0,0): 3\nActual class at (0,0): 3\nOverall accuracy: 55.1%\n\n\n\nfig = Figure(size=(600, 300))\nax1 = Axis(fig[1, 1], title=\"Original Classes\", xlabel=\"X\", ylabel=\"Y\", aspect=1)\nhm1 = heatmap!(ax1, collect(xs), collect(ys), cat_data, colormap=:Set1_3)\nColorbar(fig[1, 1][1, 2], hm1, ticks=1:3)\n\nax2 = Axis(fig[1, 2], title=\"Predicted Classes\", xlabel=\"X\", ylabel=\"Y\", aspect=1)\nhm2 = heatmap!(ax2, collect(xs), collect(ys), Matrix(class_raster), colormap=:Set1_3)\nColorbar(fig[1, 2][1, 2], hm2, ticks=1:3)\nfig\n\n\n\n\n\n\nFigure 3.9: CatSIREN: Original classes (left) vs predicted classes (right)",
+    "crumbs": [
+      "Docs",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Examples</span>"
+    ]
+  },
+  {
+    "objectID": "examples.html#summary",
+    "href": "examples.html#summary",
+    "title": "Examples",
+    "section": "Summary",
+    "text": "Summary\n\n\n\n\n\n\n\n\n\nSurrogate\nInput\nOutput\nUse Case\n\n\n\n\nLinReg\nRaster\nScalar\nSimple trends\n\n\nRasterWrap\nRaster\nScalar\nExact interpolation\n\n\nCategoricalRasterWrap\nCategorical Raster\nProbability Dict\nCategorical smoothing\n\n\nGeomWrap\nGeometry\nScalar [0,1]\nDistance-based influence\n\n\nImplicitTerrain.MLP\nNormalized Raster\nScalar\nNeural compression\n\n\nImplicitTerrain.Model\nNormalized Raster\nScalar\nHigh-quality terrain\n\n\nWindSIREN\nTwo Normalized Rasters\n(Scalar, Scalar)\nVector fields\n\n\nCatSIREN\nCategorical Raster\nProbability Dict\nNeural classification",
+    "crumbs": [
+      "Docs",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Examples</span>"
+    ]
+  },
+  {
+    "objectID": "api.html#usage",
+    "href": "api.html#usage",
+    "title": "API",
+    "section": "Usage",
+    "text": "Usage\nusing GeoSurrogates, Rasters\n\nr = Raster(...)\n\nrw = GeoSurrogates.RasterWrap(r)\n\npredict(rw, x, y)  # Linear Interpolation",
+    "crumbs": [
+      "Docs",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>API</span>"
+    ]
+  },
+  {
+    "objectID": "api.html#usage-1",
+    "href": "api.html#usage-1",
+    "title": "API",
+    "section": "Usage",
+    "text": "Usage\nusing GeoSurrogates, Rasters\n\nr = Raster(...)\n\nrw = GeoSurrogates.RasterWrap(r)\n\npredict(rw, x, y)  # Linear Interpolation",
+    "crumbs": [
+      "Docs",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>API</span>"
+    ]
+  },
+  {
+    "objectID": "changelog.html",
+    "href": "changelog.html",
+    "title": "Changelog",
+    "section": "",
+    "text": "Unreleased",
+    "crumbs": [
+      "Reference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Changelog</span>"
+    ]
+  }
+]
