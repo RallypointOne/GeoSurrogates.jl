@@ -399,6 +399,60 @@ fig
 
 ---
 
+## Composite Surrogates
+
+### AdditiveModel
+
+A boosting-style composite that fits each model to the residuals of the previous models.
+This example combines a `LinReg` (captures the broad trend) with an `ImplicitTerrain.MLP` (captures the fine details the regression misses).
+
+```{julia}
+using StatsModels
+using GeoSurrogates.Optimisers: Adam
+
+# Build an AdditiveModel: LinReg first, then MLP on the residual
+additive = AdditiveModel([
+    LinReg(elev_norm, @formula(layer1 ~ 1 + X + Y + X^2 + Y^2)),
+    ImplicitTerrain.MLP(hidden=64, n_hidden=2, alg=Adam(0.001f0))
+])
+
+# fit! trains each model sequentially on the residuals
+fit!(additive, elev_norm; steps=1000)
+
+# Predict on the full raster
+additive_predicted = predict(additive, elev_norm)
+
+# Compare errors
+linreg_only = predict(additive.models[1], elev_norm)
+linreg_error = mean(abs.(elev_norm .- linreg_only))
+additive_error = mean(abs.(elev_norm .- additive_predicted))
+println("LinReg-only MAE:     $(round(linreg_error, digits=4))")
+println("AdditiveModel MAE:   $(round(additive_error, digits=4))")
+```
+
+```{julia}
+#| label: fig-additive
+#| fig-cap: "AdditiveModel: LinReg captures the trend (left), MLP fits the residual (center), combined prediction (right)"
+
+residual_pred = predict(additive.models[2], elev_norm)
+
+fig = Figure(size=(900, 300))
+ax1 = Axis(fig[1, 1], title="LinReg Component", xlabel="X", ylabel="Y", aspect=1)
+hm1 = heatmap!(ax1, collect(xs), collect(ys), Matrix(linreg_only), colormap=:viridis)
+Colorbar(fig[1, 1][1, 2], hm1)
+
+ax2 = Axis(fig[1, 2], title="MLP Residual Component", xlabel="X", ylabel="Y", aspect=1)
+hm2 = heatmap!(ax2, collect(xs), collect(ys), Matrix(residual_pred), colormap=:RdBu)
+Colorbar(fig[1, 2][1, 2], hm2)
+
+ax3 = Axis(fig[1, 3], title="Combined Prediction", xlabel="X", ylabel="Y", aspect=1)
+hm3 = heatmap!(ax3, collect(xs), collect(ys), Matrix(additive_predicted), colormap=:viridis)
+Colorbar(fig[1, 3][1, 2], hm3)
+fig
+```
+
+---
+
 ## Summary
 
 | Surrogate | Input | Output | Use Case |
@@ -411,3 +465,4 @@ fig
 | `ImplicitTerrain.Model` | Normalized Raster | Scalar | High-quality terrain |
 | `WindSIREN` | Two Normalized Rasters | (Scalar, Scalar) | Vector fields |
 | `CatSIREN` | Categorical Raster | Probability Dict | Neural classification |
+| `AdditiveModel` | Raster | Scalar | Boosting / residual fitting |

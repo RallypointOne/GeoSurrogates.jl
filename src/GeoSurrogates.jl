@@ -10,7 +10,7 @@ import DimensionalData as DD
 import StatsAPI: predict, fit!
 
 export ImplicitTerrain, WindSurrogate, CatSIREN, predict, fit!
-export LinReg, RasterWrap, CategoricalRasterWrap, GeomWrap, normalize, gaussian
+export LinReg, RasterWrap, CategoricalRasterWrap, GeomWrap, AdditiveModel, normalize, gaussian
 
 
 #-----------------------------------------------------------------------------# normalize
@@ -58,6 +58,43 @@ predict(model::GeoSurrogate, x::Tuple) = error("predict not implemented for $(ty
 predict(model::GeoSurrogate, x::Raster) = error("predict not implemented for $(typeof(model)) with input type Raster")
 
 
+#-----------------------------------------------------------------------------# AdditiveModel
+"""
+    AdditiveModel(models::Vector)
+
+A boosting-style composite surrogate.  Each model is fitted to the residuals (target minus the
+sum of all previous model predictions), and the final prediction is the sum of all model predictions.
+
+### Examples
+
+```julia
+model = AdditiveModel([ImplicitTerrain.MLP(), ImplicitTerrain.MLP()])
+fit!(model, raster; steps=1000)
+predict(model, raster)
+```
+"""
+struct AdditiveModel{T} <: GeoSurrogate
+    models::Vector{T}
+end
+
+function fit!(o::AdditiveModel, r::Raster; kw...)
+    residual = r
+    for (i, model) in enumerate(o.models)
+        fit!(model, residual; kw...)
+        if i < length(o.models)
+            residual = Raster(Matrix(r) .- sum(Matrix(predict(o.models[j], r)) for j in 1:i), dims=DD.dims(r))
+        end
+    end
+    return o
+end
+
+predict(o::AdditiveModel, x::Tuple) = sum(predict(m, x) for m in o.models)
+
+function predict(o::AdditiveModel, r::Raster)
+    predictions = [Matrix(predict(m, r)) for m in o.models]
+    Raster(sum(predictions), dims=DD.dims(r))
+end
+
 #-----------------------------------------------------------------------------# LinReg
 struct LinReg{F <: FormulaTerm, T <: Number} <: GeoSurrogate
     formula::F
@@ -72,6 +109,9 @@ function LinReg(r::Raster, formula = @formula(layer1 ~ 1 + X * Y ))
     β = x \ y
     return LinReg(f, β)
 end
+
+# No-op: LinReg is fitted at construction
+fit!(o::LinReg, ::Raster; kw...) = o
 
 function predict(o::LinReg, coords::Tuple)
     nt = (X = coords[1], Y = coords[2])
