@@ -399,6 +399,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#rasterwrap-interpolation" id="toc-rasterwrap-interpolation" class="nav-link" data-scroll-target="#rasterwrap-interpolation">RasterWrap: Interpolation</a></li>
   <li><a href="#linreg-linear-regression" id="toc-linreg-linear-regression" class="nav-link" data-scroll-target="#linreg-linear-regression">LinReg: Linear Regression</a></li>
+  <li><a href="#idw-inverse-distance-weighting" id="toc-idw-inverse-distance-weighting" class="nav-link" data-scroll-target="#idw-inverse-distance-weighting">IDW: Inverse Distance Weighting</a></li>
+  <li><a href="#rbf-radial-basis-functions" id="toc-rbf-radial-basis-functions" class="nav-link" data-scroll-target="#rbf-radial-basis-functions">RBF: Radial Basis Functions</a></li>
+  <li><a href="#tps-thin-plate-splines" id="toc-tps-thin-plate-splines" class="nav-link" data-scroll-target="#tps-thin-plate-splines">TPS: Thin Plate Splines</a></li>
   <li><a href="#geomwrap-geometry-influence" id="toc-geomwrap-geometry-influence" class="nav-link" data-scroll-target="#geomwrap-geometry-influence">GeomWrap: Geometry Influence</a></li>
   </ul></li>
   <li><a href="#neural-network-surrogates" id="toc-neural-network-surrogates" class="nav-link" data-scroll-target="#neural-network-surrogates">Neural Network Surrogates</a>
@@ -492,20 +495,47 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model, (<span class="op">-</span><span class="fl">105.5</span>, <span class="fl">40.2</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
+<section id="idw-inverse-distance-weighting" class="level3">
+<h3 class="anchored" data-anchor-id="idw-inverse-distance-weighting">IDW: Inverse Distance Weighting</h3>
+<p>Scattered-data interpolation that weights nearby points more heavily:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> <span class="fu">IDW</span>(elev)               <span class="co"># default power=2</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> <span class="fu">IDW</span>(elev; power<span class="op">=</span><span class="fl">3</span>)      <span class="co"># sharper falloff</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model, (<span class="op">-</span><span class="fl">105.5</span>, <span class="fl">40.2</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="rbf-radial-basis-functions" class="level3">
+<h3 class="anchored" data-anchor-id="rbf-radial-basis-functions">RBF: Radial Basis Functions</h3>
+<p>Kernel-based interpolation with several built-in kernels:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> <span class="fu">RBF</span>(elev; kernel<span class="op">=:</span>gaussian, epsilon<span class="op">=</span><span class="fl">1.0</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># With polynomial augmentation</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> <span class="fu">RBF</span>(elev; kernel<span class="op">=:</span>multiquadric, epsilon<span class="op">=</span><span class="fl">1.0</span>, poly_degree<span class="op">=</span><span class="fl">1</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model, (<span class="op">-</span><span class="fl">105.5</span>, <span class="fl">40.2</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Available kernels: <code>:gaussian</code>, <code>:multiquadric</code>, <code>:inverse_multiquadric</code>, <code>:linear</code>, <code>:cubic</code>, <code>:thin_plate_spline</code>.</p>
+</section>
+<section id="tps-thin-plate-splines" class="level3">
+<h3 class="anchored" data-anchor-id="tps-thin-plate-splines">TPS: Thin Plate Splines</h3>
+<p>Thin plate spline interpolation with optional smoothing:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> <span class="fu">TPS</span>(elev)                         <span class="co"># exact interpolation</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> <span class="fu">TPS</span>(elev; regularization<span class="op">=</span><span class="fl">0.01</span>)    <span class="co"># smoothing</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model, (<span class="op">-</span><span class="fl">105.5</span>, <span class="fl">40.2</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
 <section id="geomwrap-geometry-influence" class="level3">
 <h3 class="anchored" data-anchor-id="geomwrap-geometry-influence">GeomWrap: Geometry Influence</h3>
 <p>Model the influence of geometric features (points, lines, polygons):</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">GeoInterface</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a geometry</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>polygon <span class="op">=</span> GeoInterface.<span class="fu">Polygon</span>(<span class="op">...</span>)</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Wrap it as a surrogate</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>gw <span class="op">=</span> <span class="fu">GeomWrap</span>(polygon; kernel<span class="op">=</span><span class="bu">Base</span>.<span class="fu">Fix2</span>(gaussian, <span class="fl">4</span>))</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Points inside/near the geometry have values close to 1</span></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Points far away have values close to 0</span></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(gw, (x, y))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">GeoInterface</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a geometry</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>polygon <span class="op">=</span> GeoInterface.<span class="fu">Polygon</span>(<span class="op">...</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Wrap it as a surrogate</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>gw <span class="op">=</span> <span class="fu">GeomWrap</span>(polygon; kernel<span class="op">=</span><span class="bu">Base</span>.<span class="fu">Fix2</span>(gaussian, <span class="fl">4</span>))</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Points inside/near the geometry have values close to 1</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Points far away have values close to 0</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(gw, (x, y))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 </section>
 <section id="neural-network-surrogates" class="level2">
@@ -513,56 +543,56 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="implicitterrain-terrain-modeling" class="level3">
 <h3 class="anchored" data-anchor-id="implicitterrain-terrain-modeling">ImplicitTerrain: Terrain Modeling</h3>
 <p>For high-quality terrain compression using cascaded SIREN networks:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">GeoSurrogates</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Load and normalize terrain data</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>elev <span class="op">=</span> <span class="fu">Raster</span>(<span class="st">"elevation.tif"</span>)</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>elev_norm <span class="op">=</span> <span class="fu">normalize</span>(elev)</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the model (two cascaded MLPs)</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> ImplicitTerrain.<span class="fu">Model</span>()</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit with progressive Gaussian pyramid training</span></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="fu">fit!</span>(model, elev_norm; steps<span class="op">=</span><span class="fl">1000</span>)</span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Predict</span></span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>predicted <span class="op">=</span> <span class="fu">predict</span>(model, elev_norm)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">GeoSurrogates</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Load and normalize terrain data</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>elev <span class="op">=</span> <span class="fu">Raster</span>(<span class="st">"elevation.tif"</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>elev_norm <span class="op">=</span> <span class="fu">normalize</span>(elev)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the model (two cascaded MLPs)</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> ImplicitTerrain.<span class="fu">Model</span>()</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit with progressive Gaussian pyramid training</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="fu">fit!</span>(model, elev_norm; steps<span class="op">=</span><span class="fl">1000</span>)</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Predict</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>predicted <span class="op">=</span> <span class="fu">predict</span>(model, elev_norm)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="windsiren-wind-field-modeling" class="level3">
 <h3 class="anchored" data-anchor-id="windsiren-wind-field-modeling">WindSIREN: Wind Field Modeling</h3>
 <p>For 2D vector fields (u, v components):</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">GeoSurrogates</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Load u and v wind components</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>u <span class="op">=</span> <span class="fu">normalize</span>(<span class="fu">Raster</span>(<span class="st">"u_wind.tif"</span>))</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>v <span class="op">=</span> <span class="fu">normalize</span>(<span class="fu">Raster</span>(<span class="st">"v_wind.tif"</span>))</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Create and train</span></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> WindSurrogate.<span class="fu">WindSIREN</span>()</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="fu">fit!</span>(model, u, v; steps<span class="op">=</span><span class="fl">1000</span>)</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Predict returns tuple of (u_raster, v_raster)</span></span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>u_pred, v_pred <span class="op">=</span> <span class="fu">predict</span>(model, template_raster)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">GeoSurrogates</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Load u and v wind components</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>u <span class="op">=</span> <span class="fu">normalize</span>(<span class="fu">Raster</span>(<span class="st">"u_wind.tif"</span>))</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>v <span class="op">=</span> <span class="fu">normalize</span>(<span class="fu">Raster</span>(<span class="st">"v_wind.tif"</span>))</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Create and train</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> WindSurrogate.<span class="fu">WindSIREN</span>()</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="fu">fit!</span>(model, u, v; steps<span class="op">=</span><span class="fl">1000</span>)</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Predict returns tuple of (u_raster, v_raster)</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>u_pred, v_pred <span class="op">=</span> <span class="fu">predict</span>(model, template_raster)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="catsiren-categorical-data" class="level3">
 <h3 class="anchored" data-anchor-id="catsiren-categorical-data">CatSIREN: Categorical Data</h3>
 <p>For land cover, fuel models, or other categorical rasters:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">GeoSurrogates</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Load categorical raster</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>veg <span class="op">=</span> <span class="fu">Raster</span>(<span class="st">"vegetation.tif"</span>)</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Create model (automatically determines classes)</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> CatSIREN.<span class="fu">CatSIREN</span>(veg)</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Train</span></span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="fu">fit!</span>(model, veg; steps<span class="op">=</span><span class="fl">1000</span>)</span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Predict probabilities (Dict per cell)</span></span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>probs <span class="op">=</span> <span class="fu">predict</span>(model, veg)</span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Or get most likely class</span></span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>classes <span class="op">=</span> CatSIREN.<span class="fu">predict_class</span>(model, veg)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">GeoSurrogates</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Load categorical raster</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>veg <span class="op">=</span> <span class="fu">Raster</span>(<span class="st">"vegetation.tif"</span>)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Create model (automatically determines classes)</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> CatSIREN.<span class="fu">CatSIREN</span>(veg)</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Train</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="fu">fit!</span>(model, veg; steps<span class="op">=</span><span class="fl">1000</span>)</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Predict probabilities (Dict per cell)</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>probs <span class="op">=</span> <span class="fu">predict</span>(model, veg)</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Or get most likely class</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>classes <span class="op">=</span> CatSIREN.<span class="fu">predict_class</span>(model, veg)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 </section>
 <section id="tips-for-neural-network-training" class="level2">
@@ -573,13 +603,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Monitor convergence</strong> - check predictions periodically during training</li>
 <li><strong>Adjust hidden size</strong> - larger <code>hidden</code> parameter for more complex data</li>
 </ol>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Custom network architecture</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> ImplicitTerrain.<span class="fu">MLP</span>(</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    hidden <span class="op">=</span> <span class="fl">512</span>,      <span class="co"># More hidden units</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    n_hidden <span class="op">=</span> <span class="fl">4</span>,      <span class="co"># More layers</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    ω<span class="fl">0</span> <span class="op">=</span> <span class="fl">30f0</span>,         <span class="co"># First layer frequency</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    alg <span class="op">=</span> <span class="fu">Adam</span>(<span class="fl">0.001f0</span>) <span class="co"># Different optimizer</span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Custom network architecture</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> ImplicitTerrain.<span class="fu">MLP</span>(</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    hidden <span class="op">=</span> <span class="fl">512</span>,      <span class="co"># More hidden units</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    n_hidden <span class="op">=</span> <span class="fl">4</span>,      <span class="co"># More layers</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    ω<span class="fl">0</span> <span class="op">=</span> <span class="fl">30f0</span>,         <span class="co"># First layer frequency</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    alg <span class="op">=</span> <span class="fu">Adam</span>(<span class="fl">0.001f0</span>) <span class="co"># Different optimizer</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 
 
 </section>
