@@ -108,6 +108,123 @@ Colorbar(fig[1, 3][1, 2], hm3)
 fig
 ```
 
+### IDW (Inverse Distance Weighting)
+
+Simple scattered-data interpolation that weights nearby points more heavily.
+
+```{julia}
+# Fit IDW with default power=2
+idw_model = IDW(elev)
+
+# Predict at a single point
+val = predict(idw_model, (0.0, 0.0))
+println("IDW prediction at (0, 0): $(round(val, digits=4))")
+
+# Predict on the full raster
+idw_predicted = predict(idw_model, elev)
+error = mean(abs.(elev .- idw_predicted))
+println("Mean absolute error: $(round(error, digits=6))")
+```
+
+```{julia}
+#| label: fig-idw
+#| fig-cap: "IDW: Original elevation (left) vs IDW interpolation (center) and error (right)"
+
+fig = Figure(size=(900, 300))
+ax1 = Axis(fig[1, 1], title="Original", xlabel="X", ylabel="Y", aspect=1)
+hm1 = heatmap!(ax1, collect(xs), collect(ys), elevation_data, colormap=:viridis)
+Colorbar(fig[1, 1][1, 2], hm1)
+
+ax2 = Axis(fig[1, 2], title="IDW Prediction", xlabel="X", ylabel="Y", aspect=1)
+hm2 = heatmap!(ax2, collect(xs), collect(ys), Matrix(idw_predicted), colormap=:viridis)
+Colorbar(fig[1, 2][1, 2], hm2)
+
+ax3 = Axis(fig[1, 3], title="Absolute Error", xlabel="X", ylabel="Y", aspect=1)
+hm3 = heatmap!(ax3, collect(xs), collect(ys), abs.(elevation_data .- Matrix(idw_predicted)), colormap=:Reds)
+Colorbar(fig[1, 3][1, 2], hm3)
+fig
+```
+
+### RBF (Radial Basis Function)
+
+Kernel-based interpolation with several built-in kernels. Supports optional polynomial augmentation.
+
+```{julia}
+# Fit RBF with Gaussian kernel
+rbf_model = RBF(elev; kernel=:gaussian, epsilon=1.0)
+
+# Predict at a single point
+val = predict(rbf_model, (0.0, 0.0))
+println("RBF prediction at (0, 0): $(round(val, digits=4))")
+
+# Predict on the full raster
+rbf_predicted = predict(rbf_model, elev)
+error = mean(abs.(elev .- rbf_predicted))
+println("Mean absolute error: $(round(error, digits=6))")
+```
+
+```{julia}
+#| label: fig-rbf
+#| fig-cap: "RBF: Original elevation (left) vs RBF interpolation (center) and error (right)"
+
+fig = Figure(size=(900, 300))
+ax1 = Axis(fig[1, 1], title="Original", xlabel="X", ylabel="Y", aspect=1)
+hm1 = heatmap!(ax1, collect(xs), collect(ys), elevation_data, colormap=:viridis)
+Colorbar(fig[1, 1][1, 2], hm1)
+
+ax2 = Axis(fig[1, 2], title="RBF Prediction", xlabel="X", ylabel="Y", aspect=1)
+hm2 = heatmap!(ax2, collect(xs), collect(ys), Matrix(rbf_predicted), colormap=:viridis)
+Colorbar(fig[1, 2][1, 2], hm2)
+
+ax3 = Axis(fig[1, 3], title="Absolute Error", xlabel="X", ylabel="Y", aspect=1)
+hm3 = heatmap!(ax3, collect(xs), collect(ys), abs.(elevation_data .- Matrix(rbf_predicted)), colormap=:Reds)
+Colorbar(fig[1, 3][1, 2], hm3)
+fig
+```
+
+### TPS (Thin Plate Spline)
+
+Thin plate spline interpolation with optional regularization for smoothing.
+
+```{julia}
+# Fit TPS (exact interpolation by default)
+tps_model = TPS(elev)
+
+# Predict at a single point
+val = predict(tps_model, (0.0, 0.0))
+println("TPS prediction at (0, 0): $(round(val, digits=4))")
+
+# Predict on the full raster
+tps_predicted = predict(tps_model, elev)
+error = mean(abs.(elev .- tps_predicted))
+println("Mean absolute error: $(round(error, digits=6))")
+
+# With smoothing
+tps_smooth = TPS(elev; regularization=0.01)
+tps_smooth_predicted = predict(tps_smooth, elev)
+smooth_error = mean(abs.(elev .- tps_smooth_predicted))
+println("Smoothed TPS MAE: $(round(smooth_error, digits=4))")
+```
+
+```{julia}
+#| label: fig-tps
+#| fig-cap: "TPS: Original elevation (left) vs exact TPS (center) and smoothed TPS (right)"
+
+fig = Figure(size=(900, 300))
+ax1 = Axis(fig[1, 1], title="Original", xlabel="X", ylabel="Y", aspect=1)
+hm1 = heatmap!(ax1, collect(xs), collect(ys), elevation_data, colormap=:viridis)
+Colorbar(fig[1, 1][1, 2], hm1)
+
+ax2 = Axis(fig[1, 2], title="TPS (Exact)", xlabel="X", ylabel="Y", aspect=1)
+hm2 = heatmap!(ax2, collect(xs), collect(ys), Matrix(tps_predicted), colormap=:viridis)
+Colorbar(fig[1, 2][1, 2], hm2)
+
+ax3 = Axis(fig[1, 3], title="TPS (Smoothed)", xlabel="X", ylabel="Y", aspect=1)
+hm3 = heatmap!(ax3, collect(xs), collect(ys), Matrix(tps_smooth_predicted), colormap=:viridis)
+Colorbar(fig[1, 3][1, 2], hm3)
+fig
+```
+
 ### RasterWrap
 
 Interpolation-based surrogate using B-splines. Provides exact interpolation at grid points.
@@ -458,6 +575,9 @@ fig
 | Surrogate | Input | Output | Use Case |
 |-----------|-------|--------|----------|
 | `LinReg` | Raster | Scalar | Simple trends |
+| `IDW` | Raster | Scalar | Inverse distance weighting |
+| `RBF` | Raster | Scalar | Kernel-based interpolation |
+| `TPS` | Raster | Scalar | Thin plate spline interpolation |
 | `RasterWrap` | Raster | Scalar | Exact interpolation |
 | `CategoricalRasterWrap` | Categorical Raster | Probability Dict | Categorical smoothing |
 | `GeomWrap` | Geometry | Scalar [0,1] | Distance-based influence |

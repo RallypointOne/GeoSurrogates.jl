@@ -85,6 +85,78 @@ end
     @test predict(gw, (1, 0)) ≈ GeoSurrogates.gaussian(1.0, 4)
 end
 
+#-----------------------------------------------------------------------------# Small synthetic raster for IDW/RBF/TPS tests
+small_xs = range(-1, 1, length=15)
+small_ys = range(-1, 1, length=15)
+small_data = [exp(-(x^2 + y^2)) for x in small_xs, y in small_ys]
+small_raster = Raster(small_data, (X(small_xs), Y(small_ys)))
+
+#-----------------------------------------------------------------------------# IDW
+@testset "IDW" begin
+    m = IDW(small_raster)
+    @test m isa GeoSurrogates.GeoSurrogate
+    @test sprint(show, m) == "IDW"
+
+    # Exact interpolation at known data points
+    for (coord, val) in zip(DimPoints(small_raster), small_raster)
+        @test predict(m, coord) ≈ val atol=1e-6
+    end
+
+    # Raster predict returns correct shape
+    pred = predict(m, small_raster)
+    @test size(pred) == size(small_raster)
+
+    # fit! is a no-op
+    @test fit!(m, small_raster) === m
+end
+
+#-----------------------------------------------------------------------------# RBF
+@testset "RBF" begin
+    m = RBF(small_raster; kernel=:gaussian, epsilon=1.0)
+    @test m isa GeoSurrogates.GeoSurrogate
+    @test sprint(show, m) == "RBF"
+
+    # Exact interpolation at known data points
+    for (coord, val) in zip(DimPoints(small_raster), small_raster)
+        @test predict(m, coord) ≈ val atol=1e-6
+    end
+
+    # Raster predict returns correct shape
+    pred = predict(m, small_raster)
+    @test size(pred) == size(small_raster)
+
+    # fit! is a no-op
+    @test fit!(m, small_raster) === m
+
+    # Test with poly_degree=1
+    m2 = RBF(small_raster; kernel=:gaussian, epsilon=1.0, poly_degree=1)
+    for (coord, val) in zip(DimPoints(small_raster), small_raster)
+        @test predict(m2, coord) ≈ val atol=1e-6
+    end
+end
+
+#-----------------------------------------------------------------------------# TPS
+@testset "TPS" begin
+    m = TPS(small_raster)
+    @test m isa GeoSurrogates.GeoSurrogate
+    @test sprint(show, m) == "TPS"
+
+    # Exact interpolation at known data points (regularization=0)
+    for (coord, val) in zip(DimPoints(small_raster), small_raster)
+        @test predict(m, coord) ≈ val atol=1e-6
+    end
+
+    # Raster predict returns correct shape
+    pred = predict(m, small_raster)
+    @test size(pred) == size(small_raster)
+
+    # fit! is a no-op
+    @test fit!(m, small_raster) === m
+
+    # Smoothing mode (regularization > 0) should still produce reasonable output
+    m2 = TPS(small_raster; regularization=0.01)
+    @test predict(m2, (0.0, 0.0)) isa Number
+end
 
 #-----------------------------------------------------------------------------# ImplicitTerrain
 @testset "ImplicitTerrain" begin

@@ -1,6 +1,6 @@
 module GeoSurrogates
 
-using ADTypes, ArchGDAL, CategoricalArrays, DataFrames, Extents, Interpolations, Images, LazyArrays, Lux, NNlib, Optimisers, Random, Rasters, RasterDataSources, Statistics, StatsAPI, StatsModels, StyledStrings, Tables
+using ADTypes, ArchGDAL, CategoricalArrays, DataFrames, Extents, Interpolations, Images, LazyArrays, LinearAlgebra, Lux, NNlib, Optimisers, Random, Rasters, RasterDataSources, Statistics, StatsAPI, StatsModels, StyledStrings, Tables
 
 import Extents
 import GeoInterface as GI
@@ -10,7 +10,7 @@ import DimensionalData as DD
 import StatsAPI: predict, fit!
 
 export ImplicitTerrain, WindSurrogate, CatSIREN, predict, fit!
-export LinReg, RasterWrap, CategoricalRasterWrap, GeomWrap, AdditiveModel, normalize, gaussian
+export LinReg, IDW, RBF, TPS, RasterWrap, CategoricalRasterWrap, GeomWrap, AdditiveModel, normalize, gaussian
 
 
 #-----------------------------------------------------------------------------# normalize
@@ -122,6 +122,223 @@ function predict(o::LinReg, r::Raster)
     df = DataFrame(r)
     X = modelmatrix(o.formula, df)
     ẑ = X * o.β
+    Raster(reshape(ẑ, size(r)), dims=DD.dims(r))
+end
+
+#-----------------------------------------------------------------------------# IDW (Inverse Distance Weighting)
+"""
+    IDW(r::Raster; power=2)
+
+Inverse Distance Weighting surrogate.  Predicts values as a weighted average of known data
+points, where weights are inversely proportional to the distance raised to `power`.
+
+### Examples
+
+```julia
+model = IDW(raster)
+predict(model, (x, y))
+predict(model, raster)
+```
+"""
+struct IDW{T <: AbstractFloat} <: GeoSurrogate
+    xs::Vector{T}
+    ys::Vector{T}
+    zs::Vector{T}
+    power::T
+end
+
+function IDW(r::Raster; power=2)
+    df = dropmissing!(DataFrame(r))
+    T = promote_type(eltype(df.X), eltype(df.Y), eltype(df.layer1), typeof(float(power)))
+    IDW(T.(df.X), T.(df.Y), T.(df.layer1), T(power))
+end
+
+fit!(o::IDW, ::Raster; kw...) = o
+
+function predict(o::IDW, coords::Tuple)
+    x, y = coords
+    T = eltype(o.xs)
+    xf, yf = T(x), T(y)
+    p = o.power
+    num = zero(T)
+    den = zero(T)
+    @inbounds for i in eachindex(o.xs, o.ys, o.zs)
+        dx = xf - o.xs[i]
+        dy = yf - o.ys[i]
+        d2 = dx * dx + dy * dy
+        d2 == zero(T) && return o.zs[i]
+        w = inv(d2^(p / 2))
+        num += w * o.zs[i]
+        den += w
+    end
+    return num / den
+end
+
+function predict(o::IDW, r::Raster)
+    ẑ = [predict(o, pt) for pt in DimPoints(r)]
+    Raster(reshape(ẑ, size(r)), dims=DD.dims(r))
+end
+
+#-----------------------------------------------------------------------------# RBF (Radial Basis Function)
+rbf_gaussian(r, ε) = exp(-(ε * r)^2)
+rbf_multiquadric(r, ε) = sqrt(1 + (ε * r)^2)
+rbf_inverse_multiquadric(r, ε) = inv(sqrt(1 + (ε * r)^2))
+rbf_linear(r, ε) = r
+rbf_cubic(r, ε) = r^3
+rbf_thin_plate_spline(r, ε) = r > 0 ? r^2 * log(r) : zero(r)
+
+const RBF_KERNELS = Dict{Symbol, Function}(
+    :gaussian              => rbf_gaussian,
+    :multiquadric          => rbf_multiquadric,
+    :inverse_multiquadric  => rbf_inverse_multiquadric,
+    :linear                => rbf_linear,
+    :cubic                 => rbf_cubic,
+    :thin_plate_spline     => rbf_thin_plate_spline,
+)
+
+"""
+    RBF(r::Raster; kernel=:gaussian, epsilon=1.0, poly_degree=0)
+
+Radial Basis Function surrogate.  Interpolates scattered data using a kernel applied to
+pairwise distances.  Set `poly_degree=1` to augment with a linear polynomial term.
+
+Available kernels: `:gaussian`, `:multiquadric`, `:inverse_multiquadric`, `:linear`,
+`:cubic`, `:thin_plate_spline`.
+
+### Examples
+
+```julia
+model = RBF(raster; kernel=:gaussian, epsilon=1.0)
+predict(model, (x, y))
+```
+"""
+struct RBF{T <: AbstractFloat, K} <: GeoSurrogate
+    xs::Vector{T}
+    ys::Vector{T}
+    weights::Vector{T}
+    kernel::K
+    epsilon::T
+    poly_degree::Int
+end
+
+function RBF(r::Raster; kernel=:gaussian, epsilon=1.0, poly_degree=0)
+    df = dropmissing!(DataFrame(r))
+    T = promote_type(eltype(df.X), eltype(df.Y), eltype(df.layer1), typeof(float(epsilon)))
+    xs = T.(df.X)
+    ys = T.(df.Y)
+    zs = T.(df.layer1)
+    n = length(xs)
+    ε = T(epsilon)
+    kfn = kernel isa Symbol ? RBF_KERNELS[kernel] : kernel
+
+    # Build distance matrix and apply kernel
+    Φ = Matrix{T}(undef, n, n)
+    @inbounds for j in 1:n, i in 1:n
+        d = hypot(xs[i] - xs[j], ys[i] - ys[j])
+        Φ[i, j] = kfn(d, ε)
+    end
+
+    if poly_degree >= 1
+        P = hcat(ones(T, n), xs, ys)
+        Z = zeros(T, 3, 3)
+        A = [Φ P; P' Z]
+        rhs = [zs; zeros(T, 3)]
+        w = A \ rhs
+    else
+        w = Φ \ zs
+    end
+
+    RBF(xs, ys, w, kfn, ε, poly_degree)
+end
+
+fit!(o::RBF, ::Raster; kw...) = o
+
+function predict(o::RBF, coords::Tuple)
+    x, y = coords
+    T = eltype(o.xs)
+    xf, yf = T(x), T(y)
+    n = length(o.xs)
+    val = zero(T)
+    @inbounds for i in 1:n
+        d = hypot(xf - o.xs[i], yf - o.ys[i])
+        val += o.weights[i] * o.kernel(d, o.epsilon)
+    end
+    if o.poly_degree >= 1
+        val += o.weights[n+1] + o.weights[n+2] * xf + o.weights[n+3] * yf
+    end
+    return val
+end
+
+function predict(o::RBF, r::Raster)
+    ẑ = [predict(o, pt) for pt in DimPoints(r)]
+    Raster(reshape(ẑ, size(r)), dims=DD.dims(r))
+end
+
+#-----------------------------------------------------------------------------# TPS (Thin Plate Spline)
+_tps_kernel(r) = r > 0 ? r^2 * log(r) : zero(r)
+
+"""
+    TPS(r::Raster; regularization=0.0)
+
+Thin Plate Spline surrogate.  Always includes an affine term (`a₀ + a₁x + a₂y`).
+Set `regularization > 0` for smoothing instead of exact interpolation.
+
+### Examples
+
+```julia
+model = TPS(raster)
+predict(model, (x, y))
+```
+"""
+struct TPS{T <: AbstractFloat} <: GeoSurrogate
+    xs::Vector{T}
+    ys::Vector{T}
+    weights::Vector{T}
+    affine::Vector{T}
+    regularization::T
+end
+
+function TPS(r::Raster; regularization=0.0)
+    df = dropmissing!(DataFrame(r))
+    T = promote_type(eltype(df.X), eltype(df.Y), eltype(df.layer1), typeof(float(regularization)))
+    xs = T.(df.X)
+    ys = T.(df.Y)
+    zs = T.(df.layer1)
+    n = length(xs)
+    λ = T(regularization)
+
+    # Build kernel matrix
+    Φ = Matrix{T}(undef, n, n)
+    @inbounds for j in 1:n, i in 1:n
+        d = hypot(xs[i] - xs[j], ys[i] - ys[j])
+        Φ[i, j] = _tps_kernel(d)
+    end
+
+    P = hcat(ones(T, n), xs, ys)
+    Z = zeros(T, 3, 3)
+    A = [Φ + λ * I P; P' Z]
+    rhs = [zs; zeros(T, 3)]
+    w = A \ rhs
+
+    TPS(xs, ys, w[1:n], w[n+1:n+3], λ)
+end
+
+fit!(o::TPS, ::Raster; kw...) = o
+
+function predict(o::TPS, coords::Tuple)
+    x, y = coords
+    T = eltype(o.xs)
+    xf, yf = T(x), T(y)
+    val = o.affine[1] + o.affine[2] * xf + o.affine[3] * yf
+    @inbounds for i in eachindex(o.xs, o.ys, o.weights)
+        d = hypot(xf - o.xs[i], yf - o.ys[i])
+        val += o.weights[i] * _tps_kernel(d)
+    end
+    return val
+end
+
+function predict(o::TPS, r::Raster)
+    ẑ = [predict(o, pt) for pt in DimPoints(r)]
     Raster(reshape(ẑ, size(r)), dims=DD.dims(r))
 end
 

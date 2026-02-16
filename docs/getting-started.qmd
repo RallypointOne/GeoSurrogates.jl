@@ -74,6 +74,43 @@ model = LinReg(elev, @formula(layer1 ~ 1 + X + Y + X^2 + Y^2))
 predict(model, (-105.5, 40.2))
 ```
 
+### IDW: Inverse Distance Weighting
+
+Scattered-data interpolation that weights nearby points more heavily:
+
+```julia
+model = IDW(elev)               # default power=2
+model = IDW(elev; power=3)      # sharper falloff
+
+predict(model, (-105.5, 40.2))
+```
+
+### RBF: Radial Basis Functions
+
+Kernel-based interpolation with several built-in kernels:
+
+```julia
+model = RBF(elev; kernel=:gaussian, epsilon=1.0)
+
+# With polynomial augmentation
+model = RBF(elev; kernel=:multiquadric, epsilon=1.0, poly_degree=1)
+
+predict(model, (-105.5, 40.2))
+```
+
+Available kernels: `:gaussian`, `:multiquadric`, `:inverse_multiquadric`, `:linear`, `:cubic`, `:thin_plate_spline`.
+
+### TPS: Thin Plate Splines
+
+Thin plate spline interpolation with optional smoothing:
+
+```julia
+model = TPS(elev)                         # exact interpolation
+model = TPS(elev; regularization=0.01)    # smoothing
+
+predict(model, (-105.5, 40.2))
+```
+
 ### GeomWrap: Geometry Influence
 
 Model the influence of geometric features (points, lines, polygons):
