@@ -12,6 +12,10 @@ execute:
 
 book:
   title: "GeoSurrogates.jl"
+  search:
+    location: sidebar
+    keyboard-shortcut:
+      - "/"
   navbar:
     right:
       - icon: star
@@ -25,11 +29,19 @@ book:
         - index.qmd
         - getting-started.qmd
         - examples.qmd
+    - part: "API"
+      chapters:
         - api.qmd
     - part: "Reference"
       chapters:
         - changelog.qmd
         - coverage.qmd
+
+  page-footer:
+    center: "Built on __BUILD_DATE__"
+
+language:
+  search-text-placeholder: "Search  (/)"
 
 format:
   html:
@@ -38,5 +50,6 @@ format:
     theme:
       light: flatly
       dark: darkly
+    respect-user-color-scheme: true
     include-after-body:
       - file: _version-selector.html

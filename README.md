@@ -1,8 +1,9 @@
-# GeoSurrogates
+[![CI](https://github.com/joshday/GeoSurrogates.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/joshday/GeoSurrogates.jl/actions/workflows/CI.yml)
+[![Docs Build](https://github.com/joshday/GeoSurrogates.jl/actions/workflows/Docs.yml/badge.svg)](https://github.com/joshday/GeoSurrogates.jl/actions/workflows/Docs.yml)
+[![Stable Docs](https://img.shields.io/badge/docs-stable-blue)](https://joshday.github.io/GeoSurrogates.jl/stable/)
+[![Dev Docs](https://img.shields.io/badge/docs-dev-blue)](https://joshday.github.io/GeoSurrogates.jl/dev/)
 
-[![Build Status](https://github.com/joshday/GeoSurrogates.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/joshday/GeoSurrogates.jl/actions/workflows/CI.yml?query=branch%3Amain)
-[![Docs](https://github.com/joshday/GeoSurrogates.jl/actions/workflows/docs.yml/badge.svg?branch=main)](https://github.com/joshday/GeoSurrogates.jl/actions/workflows/docs.yml?query=branch%3Amain)
-[![Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://rallypointone.github.io/GeoSurrogates.jl/)
+# GeoSurrogates.jl
 
 ## Usage
 

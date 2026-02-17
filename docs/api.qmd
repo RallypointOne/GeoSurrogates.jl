@@ -1,6 +1,8 @@
 ---
 title: "API"
 engine: julia
+toc: true
+toc-depth: 4
 ---
 
 ```{julia}
@@ -14,41 +16,24 @@ using GeoSurrogates
 #| output: asis
 export_names = filter(!=(:GeoSurrogates), names(GeoSurrogates))
 
-println("""
-<button class="btn btn-sm btn-outline-secondary mb-3" id="toggle-all-callouts">Expand All</button>
-<script>
-document.getElementById('toggle-all-callouts').addEventListener('click', function() {
-  var btn = this;
-  var bodies = document.querySelectorAll('.callout-collapse.collapse');
-  var allOpen = Array.from(bodies).every(function(el) { return el.classList.contains('show'); });
-  bodies.forEach(function(el) {
-    var bsCollapse = bootstrap.Collapse.getOrCreateInstance(el, {toggle: false});
-    allOpen ? bsCollapse.hide() : bsCollapse.show();
-  });
-  btn.textContent = allOpen ? 'Expand All' : 'Collapse All';
-});
-</script>
-""")
+classify(b) = b isa Type ? :type : b isa Function ? :function : :constant
 
-# Table of contents
-for name in export_names
-    binding = getfield(GeoSurrogates, name)
-    kind = binding isa Type ? "type" : binding isa Function ? "function" : binding isa Module ? "module" : "constant"
-    println("- [`$name`](#$(lowercase(string(name)))) *($(kind))*")
-end
-println()
+for (kind, label) in [(:type, "Types"), (:function, "Functions"), (:constant, "Constants")]
+    items = filter(n -> classify(getfield(GeoSurrogates, n)) == kind, export_names)
+    isempty(items) && continue
+    println("## $label\n")
+    for name in items
+        binding = getfield(GeoSurrogates, name)
+        doc = string(Docs.doc(binding))
+        println("""
+        #### `$name` {#$(lowercase(string(name)))}
 
-# Detailed sections
-for name in export_names
-    binding = getfield(GeoSurrogates, name)
-    kind = binding isa Type ? "type" : binding isa Function ? "function" : binding isa Module ? "module" : "constant"
-    doc = string(Docs.doc(binding))
-    println("""
-    ::: {.callout-note collapse="true" appearance="minimal"}
-    ## `$name` [*($(kind))*]{.text-muted}
-
-    $doc
-    :::
-    """)
+        ::: {.card .mb-3}
+        ::: {.card-body}
+        $doc
+        :::
+        :::
+        """)
+    end
 end
 ```

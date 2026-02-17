@@ -6,15 +6,24 @@
 
 - Run tests: `julia --project -e 'using Pkg; Pkg.test()'`
 - Build docs: `quarto render docs`
+- `docs/` has its own Project.toml for doc-specific dependencies.
+- Each .qmd file in the docs should have `engine: julia` in the YAML frontmatter
+- Quarto YAML reference: https://quarto.org/docs/reference/
 - Never edit Project.toml or Manifest.toml manually — use Pkg
 - Only use top-level .gitignore file
+
+# Docs Sidebar
+
+- `api.qmd` must always be the last item before the "Reference" section in `_quarto.yml`
+- `api.qmd` lives in its own `part: "API"` to visually separate it from other doc pages
+- The API page uses open cards (not collapsible blocks) to display exports
 
 # Style
 
 - 4-space indentation
 - Docstrings on all exports
 - Use `### Examples` for inline docs examples
-- Segment code sections with `#-----------------------------------------------------------------------------# Title`
+- Segment code sections with: "#" * repeat('-', 80) * "# " * "$section_title"
 
 # Releases
 
