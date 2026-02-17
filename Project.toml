@@ -1,6 +1,6 @@
 name = "GeoSurrogates"
 uuid = "7068cc40-2035-44e5-a3a1-4a05757b754b"
-version = "1.0.0-DEV"
+version = "0.1.0"
 authors = ["Josh Day <emailjoshday@gmail.com> and contributors"]
 
 [deps]
