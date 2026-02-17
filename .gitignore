@@ -20,3 +20,4 @@ data/
 *.gif
 *.geojson
 *.png
+docs/_freeze/

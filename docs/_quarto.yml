@@ -6,6 +6,10 @@ engine: julia
 julia:
   project: "."
 
+execute:
+  freeze: auto
+  timeout: 600
+
 book:
   title: "GeoSurrogates.jl"
   navbar:

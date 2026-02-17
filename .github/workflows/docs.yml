@@ -41,6 +41,13 @@ jobs:
       - uses: julia-actions/cache@v2
       - name: Install docs dependencies
         run: julia --project=docs -e 'using Pkg; Pkg.develop(path="."); Pkg.instantiate()'
+      - name: Cache Quarto freeze
+        uses: actions/cache@v4
+        with:
+          path: docs/_freeze
+          key: quarto-freeze-${{ hashFiles('docs/**/*.qmd', 'src/**/*.jl') }}
+          restore-keys: |
+            quarto-freeze-
       - name: Install lcov
         run: sudo apt-get install -y lcov
       - uses: quarto-dev/quarto-actions/setup@v2

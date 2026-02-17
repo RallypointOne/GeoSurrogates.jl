@@ -357,12 +357,12 @@ println("Normalized elevation range: $(extrema(elev_norm))")
 
 # Create and train MLP
 mlp = ImplicitTerrain.MLP(hidden=64, n_hidden=2)  # Smaller network for demo
-fit!(mlp, elev_norm; steps=200)
+fit!(mlp, elev_norm; steps=2000)
 
 # Predict
 mlp_predicted = predict(mlp, elev_norm)
 error = mean(abs.(elev_norm .- mlp_predicted))
-println("Mean absolute error after 200 steps: $(round(error, digits=4))")
+println("Mean absolute error after 2000 steps: $(round(error, digits=4))")
 ```
 
 ```{julia}
@@ -389,8 +389,7 @@ Cascaded SIREN with surface and geometry components, trained progressively.
 terrain_model = ImplicitTerrain.Model()
 
 # Fit with progressive Gaussian pyramid training
-# Using minimal steps for demo (normally use 1000+)
-fit!(terrain_model, elev_norm; steps=50)
+fit!(terrain_model, elev_norm; steps=500)
 
 # Predict
 terrain_predicted = predict(terrain_model, elev_norm)
@@ -434,7 +433,7 @@ v_norm = normalize(v_wind)
 
 # Create and train WindSIREN
 wind_model = WindSurrogate.WindSIREN(hidden=64, n_hidden=2)
-fit!(wind_model, u_norm, v_norm; steps=200)
+fit!(wind_model, u_norm, v_norm; steps=2000)
 
 # Predict returns tuple of (u_raster, v_raster)
 u_pred, v_pred = predict(wind_model, u_norm)
@@ -478,7 +477,7 @@ cat_model = CatSIREN.CatSIREN(veg; hidden=64, n_hidden=2)
 println("Detected classes: $(cat_model.classes)")
 
 # Train
-fit!(cat_model, veg; steps=100)
+fit!(cat_model, veg; steps=1000)
 
 # Predict probabilities at center
 probs = predict(cat_model, (0.0, 0.0))
@@ -534,7 +533,7 @@ additive = AdditiveModel([
 ])
 
 # fit! trains each model sequentially on the residuals
-fit!(additive, elev_norm; steps=1000)
+fit!(additive, elev_norm; steps=2000)
 
 # Predict on the full raster
 additive_predicted = predict(additive, elev_norm)
