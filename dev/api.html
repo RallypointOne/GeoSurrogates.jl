@@ -83,18 +83,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/bootstrap/bootstrap-dark-7c8ba9dac8feea6a77ed63b2e2898d0e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
 <link href="site_libs/bootstrap/bootstrap-c58f986be3ff872790ab570c6d9e49f2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
-  "location": "navbar",
+  "location": "sidebar",
   "copy-button": false,
   "collapse-after": 3,
-  "panel-placement": "end",
-  "type": "overlay",
+  "panel-placement": "start",
+  "type": "textbox",
   "limit": 50,
   "keyboard-shortcut": [
-    "f",
-    "/",
-    "s"
+    "/"
   ],
-  "show-item-context": false,
   "language": {
     "search-no-results-text": "No results",
     "search-matching-documents-text": "matching documents",
@@ -103,7 +100,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-more-match-text": "more match in this document",
     "search-more-matches-text": "more matches in this document",
     "search-clear-button-title": "Clear",
-    "search-text-placeholder": "",
+    "search-text-placeholder": "Search  (/)",
     "search-detached-cancel-button-title": "Cancel",
     "search-submit-button-title": "Submit",
     "search-label": "Search"
@@ -257,7 +254,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       }
     };
     const authorPrefersDark = false;
-    const darkModeDefault = authorPrefersDark;
+    const queryPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkModeDefault = queryPrefersDark.matches;
       document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
       document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
     let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
@@ -270,6 +268,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       toggleGiscusIfUsed(toAlternate, darkModeDefault);
       window.dispatchEvent(new Event('resize'));
     };
+    queryPrefersDark.addEventListener("change", e => {
+      if(window.localStorage.getItem("quarto-color-scheme") !== null)
+        return;
+      const alternate = e.matches
+      toggleColorMode(alternate);
+      localAlternateSentinel = e.matches ? 'alternate' : 'default'; // this is used alongside local storage!
+      toggleGiscusIfUsed(alternate, darkModeDefault);
+    });
     // Switch to dark mode if need be
     if (hasAlternateSentinel()) {
       toggleColorMode(true);
@@ -287,7 +293,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <span class="navbar-title">GeoSurrogates.jl</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
@@ -315,9 +320,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./index.html">Docs</a></li><li class="breadcrumb-item"><a href="./api.html"><span class="chapter-title">API</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./api.html">API</a></li><li class="breadcrumb-item"><a href="./api.html"><span class="chapter-title">API</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
     </div>
   </nav>
 </header>
@@ -325,6 +333,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
   <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
     <div class="sidebar-menu-container"> 
     <ul class="list-unstyled mt-1">
         <li class="sidebar-item sidebar-item-section">
@@ -351,6 +364,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <a href="./examples.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Examples</span></a>
   </div>
 </li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">API</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./api.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">API</span></a>
@@ -360,13 +384,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
  <span class="menu-text">Reference</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./changelog.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Changelog</span></a>
@@ -384,14 +408,43 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#types" id="toc-types" class="nav-link active" data-scroll-target="#types">Types</a>
+  <ul>
+  <li><a href="#additivemodel" id="toc-additivemodel" class="nav-link" data-scroll-target="#additivemodel"><code>AdditiveModel</code></a></li>
+  <li><a href="#categoricalrasterwrap" id="toc-categoricalrasterwrap" class="nav-link" data-scroll-target="#categoricalrasterwrap"><code>CategoricalRasterWrap</code></a></li>
+  <li><a href="#geomwrap" id="toc-geomwrap" class="nav-link" data-scroll-target="#geomwrap"><code>GeomWrap</code></a></li>
+  <li><a href="#idw" id="toc-idw" class="nav-link" data-scroll-target="#idw"><code>IDW</code></a></li>
+  <li><a href="#linreg" id="toc-linreg" class="nav-link" data-scroll-target="#linreg"><code>LinReg</code></a></li>
+  <li><a href="#rbf" id="toc-rbf" class="nav-link" data-scroll-target="#rbf"><code>RBF</code></a></li>
+  <li><a href="#rasterwrap" id="toc-rasterwrap" class="nav-link" data-scroll-target="#rasterwrap"><code>RasterWrap</code></a></li>
+  <li><a href="#tps" id="toc-tps" class="nav-link" data-scroll-target="#tps"><code>TPS</code></a></li>
+  </ul></li>
+  <li><a href="#functions" id="toc-functions" class="nav-link" data-scroll-target="#functions">Functions</a>
+  <ul>
+  <li><a href="#fit-fit" id="toc-fit-fit" class="nav-link" data-scroll-target="#fit-fit"><code>fit!</code> {#fit!}</a></li>
+  <li><a href="#gaussian" id="toc-gaussian" class="nav-link" data-scroll-target="#gaussian"><code>gaussian</code></a></li>
+  <li><a href="#normalize" id="toc-normalize" class="nav-link" data-scroll-target="#normalize"><code>normalize</code></a></li>
+  <li><a href="#predict" id="toc-predict" class="nav-link" data-scroll-target="#predict"><code>predict</code></a></li>
+  </ul></li>
+  <li><a href="#constants" id="toc-constants" class="nav-link" data-scroll-target="#constants">Constants</a>
+  <ul>
+  <li><a href="#catsiren" id="toc-catsiren" class="nav-link" data-scroll-target="#catsiren"><code>CatSIREN</code></a></li>
+  <li><a href="#implicitterrain" id="toc-implicitterrain" class="nav-link" data-scroll-target="#implicitterrain"><code>ImplicitTerrain</code></a></li>
+  <li><a href="#windsurrogate" id="toc-windsurrogate" class="nav-link" data-scroll-target="#windsurrogate"><code>WindSurrogate</code></a></li>
+  </ul></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./index.html">Docs</a></li><li class="breadcrumb-item"><a href="./api.html"><span class="chapter-title">API</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./api.html">API</a></li><li class="breadcrumb-item"><a href="./api.html"><span class="chapter-title">API</span></a></li></ol></nav>
 <div class="quarto-title">
 <h1 class="title"><span class="chapter-title">API</span></h1>
 </div>
@@ -410,50 +463,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<button class="btn btn-sm btn-outline-secondary mb-3" id="toggle-all-callouts">
-Expand All
-</button>
-<script>
-document.getElementById('toggle-all-callouts').addEventListener('click', function() {
-  var btn = this;
-  var bodies = document.querySelectorAll('.callout-collapse.collapse');
-  var allOpen = Array.from(bodies).every(function(el) { return el.classList.contains('show'); });
-  bodies.forEach(function(el) {
-    var bsCollapse = bootstrap.Collapse.getOrCreateInstance(el, {toggle: false});
-    allOpen ? bsCollapse.hide() : bsCollapse.show();
-  });
-  btn.textContent = allOpen ? 'Expand All' : 'Collapse All';
-});
-</script>
-<ul>
-<li><a href="examples.html#additivemodel"><code>AdditiveModel</code></a> <em>(type)</em></li>
-<li><a href="#catsiren"><code>CatSIREN</code></a> <em>(module)</em></li>
-<li><a href="examples.html#categoricalrasterwrap"><code>CategoricalRasterWrap</code></a> <em>(type)</em></li>
-<li><a href="examples.html#geomwrap"><code>GeomWrap</code></a> <em>(type)</em></li>
-<li><a href="#idw"><code>IDW</code></a> <em>(type)</em></li>
-<li><a href="#implicitterrain"><code>ImplicitTerrain</code></a> <em>(module)</em></li>
-<li><a href="examples.html#linreg"><code>LinReg</code></a> <em>(type)</em></li>
-<li><a href="#rbf"><code>RBF</code></a> <em>(type)</em></li>
-<li><a href="examples.html#rasterwrap"><code>RasterWrap</code></a> <em>(type)</em></li>
-<li><a href="#tps"><code>TPS</code></a> <em>(type)</em></li>
-<li><a href="#windsurrogate"><code>WindSurrogate</code></a> <em>(module)</em></li>
-<li><a href="#fit!"><code>fit!</code></a> <em>(function)</em></li>
-<li><a href="#gaussian"><code>gaussian</code></a> <em>(function)</em></li>
-<li><a href="#normalize"><code>normalize</code></a> <em>(function)</em></li>
-<li><a href="#predict"><code>predict</code></a> <em>(function)</em></li>
-</ul>
-<div class="callout callout-style-simple callout-note no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span><code>AdditiveModel</code> <span class="text-muted"><em>(type)</em></span>
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-1" class="callout-1-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
+<section id="types" class="level2">
+<h2 class="anchored" data-anchor-id="types">Types</h2>
+<section id="additivemodel" class="level4">
+<h4 class="anchored"><code>AdditiveModel</code></h4>
+<div class="card mb-3">
+<div class="card-body">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">AdditiveModel</span>(models<span class="op">::</span><span class="dt">Vector</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>A boosting-style composite surrogate. Each model is fitted to the residuals (target minus the sum of all previous model predictions), and the final prediction is the sum of all model predictions.</p>
 <section id="examples" class="level3">
@@ -464,20 +479,194 @@ document.getElementById('toggle-all-callouts').addEventListener('click', functio
 </section>
 </div>
 </div>
+</section>
+<section id="categoricalrasterwrap" class="level4">
+<h4 class="anchored" data-anchor-id="categoricalrasterwrap"><code>CategoricalRasterWrap</code></h4>
+<div class="card mb-3">
+<div class="card-body">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">CategoricalRasterWrap</span>(r<span class="op">::</span><span class="dt">Raster</span>; kernel)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>A GeoSurrogate for categorical rasters using kernel smoothing. Here, “categorical raster” refers to a raster where its numerical data is associated with discrete categories (e.g.&nbsp;land cover types).</p>
 </div>
-<div class="callout callout-style-simple callout-note no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
 </div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span><code>CatSIREN</code> <span class="text-muted"><em>(module)</em></span>
+</section>
+<section id="geomwrap" class="level4">
+<h4 class="anchored" data-anchor-id="geomwrap"><code>GeomWrap</code></h4>
+<div class="card mb-3">
+<div class="card-body">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">GeomWrap</span>(geometry; kernel)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>A GeoSurrogate representing a geometry. Coordinates contained in the geometry will result in <code>predict(::GeomWrap, coords)) == 1.0</code>. Coordinates “far” will be <code>0.0</code>. “Near” coordinates are determined by the <code>kernel</code> function evaluated at the distance between the coordinate and the geometry.</p>
 </div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-2" class="callout-2-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">CatSIREN</span>(n_classes; kwargs<span class="op">...</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="idw" class="level4">
+<h4 class="anchored"><code>IDW</code></h4>
+<div class="card mb-3">
+<div class="card-body">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">IDW</span>(r<span class="op">::</span><span class="dt">Raster</span>; power<span class="op">=</span><span class="fl">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Inverse Distance Weighting surrogate. Predicts values as a weighted average of known data points, where weights are inversely proportional to the distance raised to <code>power</code>.</p>
+<section id="examples-1" class="level3">
+<h3 class="anchored" data-anchor-id="examples-1">Examples</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> <span class="fu">IDW</span>(raster)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model, (x, y))</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model, raster)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</div>
+</div>
+</section>
+<section id="linreg" class="level4">
+<h4 class="anchored" data-anchor-id="linreg"><code>LinReg</code></h4>
+<div class="card mb-3">
+<div class="card-body">
+<p>No documentation found for public binding <code>GeoSurrogates.LinReg</code>.</p>
+<section id="summary" class="level1">
+<h1>Summary</h1>
+<pre><code>struct GeoSurrogates.LinReg{F&lt;:StatsModels.FormulaTerm, T&lt;:Number}</code></pre>
+</section>
+<section id="fields" class="level1">
+<h1>Fields</h1>
+<pre><code>formula :: F&lt;:StatsModels.FormulaTerm
+β       :: Array{T&lt;:Number, 1}</code></pre>
+</section>
+<section id="supertype-hierarchy" class="level1">
+<h1>Supertype Hierarchy</h1>
+<pre><code>GeoSurrogates.LinReg{F&lt;:StatsModels.FormulaTerm, T&lt;:Number} &lt;: GeoSurrogates.GeoSurrogate &lt;: Any</code></pre>
+</section>
+</div>
+</div>
+</section>
+<section id="rbf" class="level4">
+<h4 class="anchored"><code>RBF</code></h4>
+<div class="card mb-3">
+<div class="card-body">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">RBF</span>(r<span class="op">::</span><span class="dt">Raster</span>; kernel<span class="op">=:</span>gaussian, epsilon<span class="op">=</span><span class="fl">1.0</span>, poly_degree<span class="op">=</span><span class="fl">0</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Radial Basis Function surrogate. Interpolates scattered data using a kernel applied to pairwise distances. Set <code>poly_degree=1</code> to augment with a linear polynomial term.</p>
+<p>Available kernels: <code>:gaussian</code>, <code>:multiquadric</code>, <code>:inverse_multiquadric</code>, <code>:linear</code>, <code>:cubic</code>, <code>:thin_plate_spline</code>.</p>
+<section id="examples-2" class="level3">
+<h3 class="anchored" data-anchor-id="examples-2">Examples</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> <span class="fu">RBF</span>(raster; kernel<span class="op">=:</span>gaussian, epsilon<span class="op">=</span><span class="fl">1.0</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model, (x, y))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</div>
+</div>
+</section>
+<section id="rasterwrap" class="level4">
+<h4 class="anchored" data-anchor-id="rasterwrap"><code>RasterWrap</code></h4>
+<div class="card mb-3">
+<div class="card-body">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">RasterWrap</span>(r<span class="op">::</span><span class="dt">Raster</span>; int <span class="op">=</span> <span class="fu">BSpline</span>(<span class="fu">Linear</span>()), ext <span class="op">=</span> <span class="cn">nothing</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>A GeoSurrogate with interpolation (and optional extrapolation).</p>
+</div>
+</div>
+</section>
+<section id="tps" class="level4">
+<h4 class="anchored"><code>TPS</code></h4>
+<div class="card mb-3">
+<div class="card-body">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">TPS</span>(r<span class="op">::</span><span class="dt">Raster</span>; regularization<span class="op">=</span><span class="fl">0.0</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Thin Plate Spline surrogate. Always includes an affine term (<code>a₀ + a₁x + a₂y</code>). Set <code>regularization &gt; 0</code> for smoothing instead of exact interpolation.</p>
+<section id="examples-3" class="level3">
+<h3 class="anchored" data-anchor-id="examples-3">Examples</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> <span class="fu">TPS</span>(raster)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model, (x, y))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</div>
+</div>
+</section>
+</section>
+<section id="functions" class="level2">
+<h2 class="anchored" data-anchor-id="functions">Functions</h2>
+<section id="fit-fit" class="level4">
+<h4 class="anchored" data-anchor-id="fit-fit"><code>fit!</code> {#fit!}</h4>
+<div class="card mb-3">
+<div class="card-body">
+<p>Fit a statistical model in-place.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fit!</span>(model<span class="op">::</span><span class="dt">WindSIREN</span>, x<span class="op">::</span><span class="dt">AbstractMatrix</span>, y<span class="op">::</span><span class="dt">AbstractMatrix</span>; steps<span class="op">=</span><span class="fl">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Train the model on coordinate-value pairs.</p>
+<ul>
+<li><code>x</code>: 2×N matrix of normalized (x, y) coordinates</li>
+<li><code>y</code>: 2×N matrix of (u, v) wind components</li>
+</ul>
+<p>Returns the fitted model.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fit!</span>(model<span class="op">::</span><span class="dt">WindSIREN</span>, u<span class="op">::</span><span class="dt">Raster</span>, v<span class="op">::</span><span class="dt">Raster</span>; steps<span class="op">=</span><span class="fl">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Train the model on u and v wind component rasters. Rasters must be normalized before fitting.</p>
+<p>Returns the fitted model.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fit!</span>(model<span class="op">::</span><span class="dt">WindSIREN</span>, uv<span class="op">::</span><span class="dt">RasterStack</span>; steps<span class="op">=</span><span class="fl">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Train the model on a RasterStack containing :u and :v layers.</p>
+<p>Returns the fitted model.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fit!</span>(model<span class="op">::</span><span class="dt">CatSIREN</span>, x<span class="op">::</span><span class="dt">AbstractMatrix</span>, y<span class="op">::</span><span class="dt">AbstractMatrix</span>; steps<span class="op">=</span><span class="fl">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Train the model on coordinate-value pairs.</p>
+<ul>
+<li><code>x</code>: 2×N matrix of normalized (x, y) coordinates</li>
+<li><code>y</code>: n_classes×N one-hot encoded matrix</li>
+</ul>
+<p>Returns the fitted model.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fit!</span>(model<span class="op">::</span><span class="dt">CatSIREN</span>, r<span class="op">::</span><span class="dt">Raster</span>; steps<span class="op">=</span><span class="fl">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Train the model on a categorical raster. The raster values should be categorical labels (integers or any comparable type).</p>
+<p>Returns the fitted model.</p>
+</div>
+</div>
+</section>
+<section id="gaussian" class="level4">
+<h4 class="anchored" data-anchor-id="gaussian"><code>gaussian</code></h4>
+<div class="card mb-3">
+<div class="card-body">
+<p>No documentation found for public binding <code>GeoSurrogates.gaussian</code>.</p>
+<p><code>GeoSurrogates.gaussian</code> is a <code>Function</code>.</p>
+<pre><code># 1 method for generic function "gaussian" from GeoSurrogates:
+ [1] gaussian(u, k)
+     @ ~/work/GeoSurrogates.jl/GeoSurrogates.jl/src/GeoSurrogates.jl:466</code></pre>
+</div>
+</div>
+</section>
+<section id="normalize" class="level4">
+<h4 class="anchored" data-anchor-id="normalize"><code>normalize</code></h4>
+<div class="card mb-3">
+<div class="card-body">
+<p>No documentation found for public binding <code>GeoSurrogates.normalize</code>.</p>
+<p><code>GeoSurrogates.normalize</code> is a <code>Function</code>.</p>
+<pre><code># 5 methods for generic function "normalize" from GeoSurrogates:
+ [1] normalize(r::Rasters.Raster)
+     @ ~/work/GeoSurrogates.jl/GeoSurrogates.jl/src/GeoSurrogates.jl:31
+ [2] normalize(x::AbstractArray{&lt;:Union{Missing, Number}})
+     @ ~/work/GeoSurrogates.jl/GeoSurrogates.jl/src/GeoSurrogates.jl:18
+ [3] normalize(dim::DimensionalData.Dimensions.Dimension)
+     @ ~/work/GeoSurrogates.jl/GeoSurrogates.jl/src/GeoSurrogates.jl:29
+ [4] normalize(nt::NamedTuple)
+     @ ~/work/GeoSurrogates.jl/GeoSurrogates.jl/src/GeoSurrogates.jl:37
+ [5] normalize(x)
+     @ ~/work/GeoSurrogates.jl/GeoSurrogates.jl/src/GeoSurrogates.jl:27</code></pre>
+</div>
+</div>
+</section>
+<section id="predict" class="level4">
+<h4 class="anchored" data-anchor-id="predict"><code>predict</code></h4>
+<div class="card mb-3">
+<div class="card-body">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model<span class="op">::</span><span class="dt">RegressionModel</span>, [newX])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Form the predicted response of <code>model</code>. An object with new covariate values <code>newX</code> can be supplied, which should have the same type and structure as that used to fit <code>model</code>; e.g.&nbsp;for a GLM it would generally be a <code>DataFrame</code> with the same variable names as the original predictors.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model<span class="op">::</span><span class="dt">WindSIREN</span>, x<span class="op">::</span><span class="dt">AbstractMatrix</span>) <span class="op">-&gt;</span> <span class="dt">Matrix</span>{<span class="dt">Float32</span>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Predict wind components (u, v) for input coordinates. Input <code>x</code> should be a 2×N matrix of normalized coordinates. Returns a 2×N matrix where row 1 is u and row 2 is v.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model<span class="op">::</span><span class="dt">WindSIREN</span>, coords<span class="op">::</span><span class="dt">Tuple</span>) <span class="op">-&gt;</span> <span class="dt">Tuple</span>{<span class="dt">Float32</span>, <span class="dt">Float32</span>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Predict wind components (u, v) for a single coordinate tuple (x, y). Returns (u, v) tuple.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model<span class="op">::</span><span class="dt">WindSIREN</span>, r<span class="op">::</span><span class="dt">Raster</span>) <span class="op">-&gt;</span> <span class="dt">Tuple</span>{Raster, Raster}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Predict wind components for all coordinates in a raster. Returns tuple of (u<em>raster, v</em>raster).</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model<span class="op">::</span><span class="dt">CatSIREN</span>, x<span class="op">::</span><span class="dt">AbstractMatrix</span>) <span class="op">-&gt;</span> <span class="dt">Matrix</span>{<span class="dt">Float32</span>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Predict class probabilities for input coordinates. Input <code>x</code> should be a 2×N matrix of normalized coordinates. Returns an n_classes×N matrix of probabilities (columns sum to 1).</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model<span class="op">::</span><span class="dt">CatSIREN</span>, coords<span class="op">::</span><span class="dt">Tuple</span>) <span class="op">-&gt;</span> <span class="dt">Dict</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Predict class probabilities for a single coordinate tuple (x, y). Returns a Dict mapping class labels to probabilities.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model<span class="op">::</span><span class="dt">CatSIREN</span>, r<span class="op">::</span><span class="dt">Raster</span>) <span class="op">-&gt;</span> Raster</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Predict class probabilities for all coordinates in a raster. Returns a Raster where each cell contains a Dict mapping class labels to probabilities.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="constants" class="level2">
+<h2 class="anchored" data-anchor-id="constants">Constants</h2>
+<section id="catsiren" class="level4">
+<h4 class="anchored" data-anchor-id="catsiren"><code>CatSIREN</code></h4>
+<div class="card mb-3">
+<div class="card-body">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">CatSIREN</span>(n_classes; kwargs<span class="op">...</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>A SIREN (Sinusoidal Representation Network) for creating implicit neural representations of categorical raster data (e.g., Landfire fuel models). Uses periodic sine activations with a softmax output layer to ensure predictions sum to 1.</p>
 <section id="arguments" class="level1">
 <h1>Arguments</h1>
@@ -499,352 +688,71 @@ document.getElementById('toggle-all-callouts').addEventListener('click', functio
 </section>
 <section id="example" class="level1">
 <h1>Example</h1>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For a categorical raster with 10 unique classes</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> <span class="fu">CatSIREN</span>(<span class="fl">10</span>)</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">fit!</span>(model, categorical_raster; steps<span class="op">=</span><span class="fl">1000</span>)</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>probs <span class="op">=</span> <span class="fu">predict</span>(model, test_raster)  <span class="co"># Returns raster of probability vectors</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For a categorical raster with 10 unique classes</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> <span class="fu">CatSIREN</span>(<span class="fl">10</span>)</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="fu">fit!</span>(model, categorical_raster; steps<span class="op">=</span><span class="fl">1000</span>)</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>probs <span class="op">=</span> <span class="fu">predict</span>(model, test_raster)  <span class="co"># Returns raster of probability vectors</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="references" class="level1">
 <h1>References</h1>
 <ul>
 <li>Sitzmann et al.&nbsp;“Implicit Neural Representations with Periodic Activation Functions” (2020)</li>
 </ul>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">CatSIREN</span>(r<span class="op">::</span><span class="dt">Raster</span>; kwargs<span class="op">...</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">CatSIREN</span>(r<span class="op">::</span><span class="dt">Raster</span>; kwargs<span class="op">...</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Create a CatSIREN model from a categorical raster, automatically determining the number of classes from the unique values in the raster.</p>
 </section>
 </div>
 </div>
-</div>
-<div class="callout callout-style-simple callout-note no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span><code>CategoricalRasterWrap</code> <span class="text-muted"><em>(type)</em></span>
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-3" class="callout-3-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">CategoricalRasterWrap</span>(r<span class="op">::</span><span class="dt">Raster</span>; kernel)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>A GeoSurrogate for categorical rasters using kernel smoothing. Here, “categorical raster” refers to a raster where its numerical data is associated with discrete categories (e.g.&nbsp;land cover types).</p>
-</div>
-</div>
-</div>
-<div class="callout callout-style-simple callout-note no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span><code>GeomWrap</code> <span class="text-muted"><em>(type)</em></span>
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-4" class="callout-4-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">GeomWrap</span>(geometry; kernel)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>A GeoSurrogate representing a geometry. Coordinates contained in the geometry will result in <code>predict(::GeomWrap, coords)) == 1.0</code>. Coordinates “far” will be <code>0.0</code>. “Near” coordinates are determined by the <code>kernel</code> function evaluated at the distance between the coordinate and the geometry.</p>
-</div>
-</div>
-</div>
-<div class="callout callout-style-simple callout-note no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span><code>IDW</code> <span class="text-muted"><em>(type)</em></span>
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-5" class="callout-5-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">IDW</span>(r<span class="op">::</span><span class="dt">Raster</span>; power<span class="op">=</span><span class="fl">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Inverse Distance Weighting surrogate. Predicts values as a weighted average of known data points, where weights are inversely proportional to the distance raised to <code>power</code>.</p>
-<section id="examples-1" class="level3">
-<h3 class="anchored" data-anchor-id="examples-1">Examples</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> <span class="fu">IDW</span>(raster)</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model, (x, y))</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model, raster)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-</div>
-</div>
-</div>
-<div class="callout callout-style-simple callout-note no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span><code>ImplicitTerrain</code> <span class="text-muted"><em>(module)</em></span>
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-6" class="callout-6-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
+<section id="implicitterrain" class="level4">
+<h4 class="anchored"><code>ImplicitTerrain</code></h4>
+<div class="card mb-3">
+<div class="card-body">
 <p>No docstring found for public module <code>GeoSurrogates.ImplicitTerrain</code>. Module does not have any public names.</p>
 <hr>
-<p><em>Package description from <code>README.md</code>:</em></p>
-<section id="geosurrogates" class="level1">
-<h1>GeoSurrogates</h1>
-<p><a href="https://github.com/joshday/GeoSurrogates.jl/actions/workflows/CI.yml?query=branch%3Amain"><img src="https://github.com/joshday/GeoSurrogates.jl/actions/workflows/CI.yml/badge.svg?branch=main" class="img-fluid" alt="Build Status"></a> <a href="https://github.com/joshday/GeoSurrogates.jl/actions/workflows/docs.yml?query=branch%3Amain"><img src="https://github.com/joshday/GeoSurrogates.jl/actions/workflows/docs.yml/badge.svg?branch=main" class="img-fluid" alt="Docs"></a> <a href="https://rallypointone.github.io/GeoSurrogates.jl/"><img src="https://img.shields.io/badge/docs-stable-blue.svg" class="img-fluid" alt="Documentation"></a></p>
+<p><em>Package description from <code>README.md</code>:</em> <a href="https://github.com/joshday/GeoSurrogates.jl/actions/workflows/CI.yml"><img src="https://github.com/joshday/GeoSurrogates.jl/actions/workflows/CI.yml/badge.svg" class="img-fluid" alt="CI"></a> <a href="https://github.com/joshday/GeoSurrogates.jl/actions/workflows/Docs.yml"><img src="https://github.com/joshday/GeoSurrogates.jl/actions/workflows/Docs.yml/badge.svg" class="img-fluid" alt="Docs Build"></a> <a href="https://joshday.github.io/GeoSurrogates.jl/stable/"><img src="https://img.shields.io/badge/docs-stable-blue.png" class="img-fluid" alt="Stable Docs"></a> <a href="https://joshday.github.io/GeoSurrogates.jl/dev/"><img src="https://img.shields.io/badge/docs-dev-blue.png" class="img-fluid" alt="Dev Docs"></a></p>
+<section id="geosurrogates.jl" class="level1">
+<h1>GeoSurrogates.jl</h1>
 <section id="usage" class="level2">
 <h2 class="anchored" data-anchor-id="usage">Usage</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">GeoSurrogates</span>, <span class="bu">Rasters</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> <span class="fu">Raster</span>(<span class="op">...</span>)</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>rw <span class="op">=</span> GeoSurrogates.<span class="fu">RasterWrap</span>(r)</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(rw, x, y)  <span class="co"># Linear Interpolation</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">GeoSurrogates</span>, <span class="bu">Rasters</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> <span class="fu">Raster</span>(<span class="op">...</span>)</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>rw <span class="op">=</span> GeoSurrogates.<span class="fu">RasterWrap</span>(r)</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(rw, x, y)  <span class="co"># Linear Interpolation</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 </section>
 </div>
 </div>
-</div>
-<div class="callout callout-style-simple callout-note no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span><code>LinReg</code> <span class="text-muted"><em>(type)</em></span>
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-7" class="callout-7-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<p>No documentation found for public binding <code>GeoSurrogates.LinReg</code>.</p>
-<section id="summary" class="level1">
-<h1>Summary</h1>
-<pre><code>struct GeoSurrogates.LinReg{F&lt;:StatsModels.FormulaTerm, T&lt;:Number}</code></pre>
 </section>
-<section id="fields" class="level1">
-<h1>Fields</h1>
-<pre><code>formula :: F&lt;:StatsModels.FormulaTerm
-β       :: Array{T&lt;:Number, 1}</code></pre>
-</section>
-<section id="supertype-hierarchy" class="level1">
-<h1>Supertype Hierarchy</h1>
-<pre><code>GeoSurrogates.LinReg{F&lt;:StatsModels.FormulaTerm, T&lt;:Number} &lt;: GeoSurrogates.GeoSurrogate &lt;: Any</code></pre>
-</section>
-</div>
-</div>
-</div>
-<div class="callout callout-style-simple callout-note no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span><code>RBF</code> <span class="text-muted"><em>(type)</em></span>
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-8" class="callout-8-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">RBF</span>(r<span class="op">::</span><span class="dt">Raster</span>; kernel<span class="op">=:</span>gaussian, epsilon<span class="op">=</span><span class="fl">1.0</span>, poly_degree<span class="op">=</span><span class="fl">0</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Radial Basis Function surrogate. Interpolates scattered data using a kernel applied to pairwise distances. Set <code>poly_degree=1</code> to augment with a linear polynomial term.</p>
-<p>Available kernels: <code>:gaussian</code>, <code>:multiquadric</code>, <code>:inverse_multiquadric</code>, <code>:linear</code>, <code>:cubic</code>, <code>:thin_plate_spline</code>.</p>
-<section id="examples-2" class="level3">
-<h3 class="anchored" data-anchor-id="examples-2">Examples</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> <span class="fu">RBF</span>(raster; kernel<span class="op">=:</span>gaussian, epsilon<span class="op">=</span><span class="fl">1.0</span>)</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model, (x, y))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-</div>
-</div>
-</div>
-<div class="callout callout-style-simple callout-note no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span><code>RasterWrap</code> <span class="text-muted"><em>(type)</em></span>
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-9" class="callout-9-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">RasterWrap</span>(r<span class="op">::</span><span class="dt">Raster</span>; int <span class="op">=</span> <span class="fu">BSpline</span>(<span class="fu">Linear</span>()), ext <span class="op">=</span> <span class="cn">nothing</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>A GeoSurrogate with interpolation (and optional extrapolation).</p>
-</div>
-</div>
-</div>
-<div class="callout callout-style-simple callout-note no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-10-contents" aria-controls="callout-10" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span><code>TPS</code> <span class="text-muted"><em>(type)</em></span>
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-10" class="callout-10-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">TPS</span>(r<span class="op">::</span><span class="dt">Raster</span>; regularization<span class="op">=</span><span class="fl">0.0</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Thin Plate Spline surrogate. Always includes an affine term (<code>a₀ + a₁x + a₂y</code>). Set <code>regularization &gt; 0</code> for smoothing instead of exact interpolation.</p>
-<section id="examples-3" class="level3">
-<h3 class="anchored" data-anchor-id="examples-3">Examples</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> <span class="fu">TPS</span>(raster)</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model, (x, y))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-</div>
-</div>
-</div>
-<div class="callout callout-style-simple callout-note no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-11-contents" aria-controls="callout-11" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span><code>WindSurrogate</code> <span class="text-muted"><em>(module)</em></span>
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-11" class="callout-11-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
+<section id="windsurrogate" class="level4">
+<h4 class="anchored"><code>WindSurrogate</code></h4>
+<div class="card mb-3">
+<div class="card-body">
 <p>No docstring found for public module <code>GeoSurrogates.WindSurrogate</code>. Module does not have any public names.</p>
 <hr>
-<p><em>Package description from <code>README.md</code>:</em></p>
-<section id="geosurrogates-1" class="level1">
-<h1>GeoSurrogates</h1>
-<p><a href="https://github.com/joshday/GeoSurrogates.jl/actions/workflows/CI.yml?query=branch%3Amain"><img src="https://github.com/joshday/GeoSurrogates.jl/actions/workflows/CI.yml/badge.svg?branch=main" class="img-fluid" alt="Build Status"></a> <a href="https://github.com/joshday/GeoSurrogates.jl/actions/workflows/docs.yml?query=branch%3Amain"><img src="https://github.com/joshday/GeoSurrogates.jl/actions/workflows/docs.yml/badge.svg?branch=main" class="img-fluid" alt="Docs"></a> <a href="https://rallypointone.github.io/GeoSurrogates.jl/"><img src="https://img.shields.io/badge/docs-stable-blue.svg" class="img-fluid" alt="Documentation"></a></p>
+<p><em>Package description from <code>README.md</code>:</em> <a href="https://github.com/joshday/GeoSurrogates.jl/actions/workflows/CI.yml"><img src="https://github.com/joshday/GeoSurrogates.jl/actions/workflows/CI.yml/badge.svg" class="img-fluid" alt="CI"></a> <a href="https://github.com/joshday/GeoSurrogates.jl/actions/workflows/Docs.yml"><img src="https://github.com/joshday/GeoSurrogates.jl/actions/workflows/Docs.yml/badge.svg" class="img-fluid" alt="Docs Build"></a> <a href="https://joshday.github.io/GeoSurrogates.jl/stable/"><img src="https://img.shields.io/badge/docs-stable-blue.png" class="img-fluid" alt="Stable Docs"></a> <a href="https://joshday.github.io/GeoSurrogates.jl/dev/"><img src="https://img.shields.io/badge/docs-dev-blue.png" class="img-fluid" alt="Dev Docs"></a></p>
+<section id="geosurrogates.jl-1" class="level1">
+<h1>GeoSurrogates.jl</h1>
 <section id="usage-1" class="level2">
 <h2 class="anchored" data-anchor-id="usage-1">Usage</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">GeoSurrogates</span>, <span class="bu">Rasters</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> <span class="fu">Raster</span>(<span class="op">...</span>)</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>rw <span class="op">=</span> GeoSurrogates.<span class="fu">RasterWrap</span>(r)</span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(rw, x, y)  <span class="co"># Linear Interpolation</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">GeoSurrogates</span>, <span class="bu">Rasters</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> <span class="fu">Raster</span>(<span class="op">...</span>)</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>rw <span class="op">=</span> GeoSurrogates.<span class="fu">RasterWrap</span>(r)</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(rw, x, y)  <span class="co"># Linear Interpolation</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 </section>
 </div>
 </div>
-</div>
-<div class="callout callout-style-simple callout-note no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-12-contents" aria-controls="callout-12" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span><code>fit!</code> <span class="text-muted"><em>(function)</em></span>
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-12" class="callout-12-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<p>Fit a statistical model in-place.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fit!</span>(model<span class="op">::</span><span class="dt">WindSIREN</span>, x<span class="op">::</span><span class="dt">AbstractMatrix</span>, y<span class="op">::</span><span class="dt">AbstractMatrix</span>; steps<span class="op">=</span><span class="fl">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Train the model on coordinate-value pairs.</p>
-<ul>
-<li><code>x</code>: 2×N matrix of normalized (x, y) coordinates</li>
-<li><code>y</code>: 2×N matrix of (u, v) wind components</li>
-</ul>
-<p>Returns the fitted model.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fit!</span>(model<span class="op">::</span><span class="dt">WindSIREN</span>, u<span class="op">::</span><span class="dt">Raster</span>, v<span class="op">::</span><span class="dt">Raster</span>; steps<span class="op">=</span><span class="fl">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Train the model on u and v wind component rasters. Rasters must be normalized before fitting.</p>
-<p>Returns the fitted model.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fit!</span>(model<span class="op">::</span><span class="dt">WindSIREN</span>, uv<span class="op">::</span><span class="dt">RasterStack</span>; steps<span class="op">=</span><span class="fl">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Train the model on a RasterStack containing :u and :v layers.</p>
-<p>Returns the fitted model.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fit!</span>(model<span class="op">::</span><span class="dt">CatSIREN</span>, x<span class="op">::</span><span class="dt">AbstractMatrix</span>, y<span class="op">::</span><span class="dt">AbstractMatrix</span>; steps<span class="op">=</span><span class="fl">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Train the model on coordinate-value pairs.</p>
-<ul>
-<li><code>x</code>: 2×N matrix of normalized (x, y) coordinates</li>
-<li><code>y</code>: n_classes×N one-hot encoded matrix</li>
-</ul>
-<p>Returns the fitted model.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fit!</span>(model<span class="op">::</span><span class="dt">CatSIREN</span>, r<span class="op">::</span><span class="dt">Raster</span>; steps<span class="op">=</span><span class="fl">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Train the model on a categorical raster. The raster values should be categorical labels (integers or any comparable type).</p>
-<p>Returns the fitted model.</p>
-</div>
-</div>
-</div>
-<div class="callout callout-style-simple callout-note no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-13-contents" aria-controls="callout-13" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span><code>gaussian</code> <span class="text-muted"><em>(function)</em></span>
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-13" class="callout-13-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<p>No documentation found for public binding <code>GeoSurrogates.gaussian</code>.</p>
-<p><code>GeoSurrogates.gaussian</code> is a <code>Function</code>.</p>
-<pre><code># 1 method for generic function "gaussian" from GeoSurrogates:
- [1] gaussian(u, k)
-     @ ~/work/GeoSurrogates.jl/GeoSurrogates.jl/src/GeoSurrogates.jl:466</code></pre>
-</div>
-</div>
-</div>
-<div class="callout callout-style-simple callout-note no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-14-contents" aria-controls="callout-14" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span><code>normalize</code> <span class="text-muted"><em>(function)</em></span>
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-14" class="callout-14-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<p>No documentation found for public binding <code>GeoSurrogates.normalize</code>.</p>
-<p><code>GeoSurrogates.normalize</code> is a <code>Function</code>.</p>
-<pre><code># 5 methods for generic function "normalize" from GeoSurrogates:
- [1] normalize(r::Rasters.Raster)
-     @ ~/work/GeoSurrogates.jl/GeoSurrogates.jl/src/GeoSurrogates.jl:31
- [2] normalize(x::AbstractArray{&lt;:Union{Missing, Number}})
-     @ ~/work/GeoSurrogates.jl/GeoSurrogates.jl/src/GeoSurrogates.jl:18
- [3] normalize(dim::DimensionalData.Dimensions.Dimension)
-     @ ~/work/GeoSurrogates.jl/GeoSurrogates.jl/src/GeoSurrogates.jl:29
- [4] normalize(nt::NamedTuple)
-     @ ~/work/GeoSurrogates.jl/GeoSurrogates.jl/src/GeoSurrogates.jl:37
- [5] normalize(x)
-     @ ~/work/GeoSurrogates.jl/GeoSurrogates.jl/src/GeoSurrogates.jl:27</code></pre>
-</div>
-</div>
-</div>
-<div class="callout callout-style-simple callout-note no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-15-contents" aria-controls="callout-15" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span><code>predict</code> <span class="text-muted"><em>(function)</em></span>
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-15" class="callout-15-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model<span class="op">::</span><span class="dt">RegressionModel</span>, [newX])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Form the predicted response of <code>model</code>. An object with new covariate values <code>newX</code> can be supplied, which should have the same type and structure as that used to fit <code>model</code>; e.g.&nbsp;for a GLM it would generally be a <code>DataFrame</code> with the same variable names as the original predictors.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model<span class="op">::</span><span class="dt">WindSIREN</span>, x<span class="op">::</span><span class="dt">AbstractMatrix</span>) <span class="op">-&gt;</span> <span class="dt">Matrix</span>{<span class="dt">Float32</span>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Predict wind components (u, v) for input coordinates. Input <code>x</code> should be a 2×N matrix of normalized coordinates. Returns a 2×N matrix where row 1 is u and row 2 is v.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model<span class="op">::</span><span class="dt">WindSIREN</span>, coords<span class="op">::</span><span class="dt">Tuple</span>) <span class="op">-&gt;</span> <span class="dt">Tuple</span>{<span class="dt">Float32</span>, <span class="dt">Float32</span>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Predict wind components (u, v) for a single coordinate tuple (x, y). Returns (u, v) tuple.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model<span class="op">::</span><span class="dt">WindSIREN</span>, r<span class="op">::</span><span class="dt">Raster</span>) <span class="op">-&gt;</span> <span class="dt">Tuple</span>{Raster, Raster}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Predict wind components for all coordinates in a raster. Returns tuple of (u<em>raster, v</em>raster).</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model<span class="op">::</span><span class="dt">CatSIREN</span>, x<span class="op">::</span><span class="dt">AbstractMatrix</span>) <span class="op">-&gt;</span> <span class="dt">Matrix</span>{<span class="dt">Float32</span>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Predict class probabilities for input coordinates. Input <code>x</code> should be a 2×N matrix of normalized coordinates. Returns an n_classes×N matrix of probabilities (columns sum to 1).</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model<span class="op">::</span><span class="dt">CatSIREN</span>, coords<span class="op">::</span><span class="dt">Tuple</span>) <span class="op">-&gt;</span> <span class="dt">Dict</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Predict class probabilities for a single coordinate tuple (x, y). Returns a Dict mapping class labels to probabilities.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model<span class="op">::</span><span class="dt">CatSIREN</span>, r<span class="op">::</span><span class="dt">Raster</span>) <span class="op">-&gt;</span> Raster</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Predict class probabilities for all coordinates in a raster. Returns a Raster where each cell contains a Dict mapping class labels to probabilities.</p>
-</div>
-</div>
-</div>
 
 
+</section>
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -1273,6 +1181,19 @@ document.getElementById('toggle-all-callouts').addEventListener('click', functio
   </div>
 </nav>
 </div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+<p>Built on 2026-02-17</p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
 <script>
 (function() {
     // Detect repo name and current version from URL path

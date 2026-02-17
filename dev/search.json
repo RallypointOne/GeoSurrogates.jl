@@ -187,13 +187,57 @@
     ]
   },
   {
+    "objectID": "api.html",
+    "href": "api.html",
+    "title": "API",
+    "section": "",
+    "text": "Types",
+    "crumbs": [
+      "API",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>API</span>"
+    ]
+  },
+  {
+    "objectID": "api.html#types",
+    "href": "api.html#types",
+    "title": "API",
+    "section": "",
+    "text": "AdditiveModel\n\n\nAdditiveModel(models::Vector)\nA boosting-style composite surrogate. Each model is fitted to the residuals (target minus the sum of all previous model predictions), and the final prediction is the sum of all model predictions.\n\nExamples\nmodel = AdditiveModel([ImplicitTerrain.MLP(), ImplicitTerrain.MLP()])\nfit!(model, raster; steps=1000)\npredict(model, raster)\n\n\n\n\n\nCategoricalRasterWrap\n\n\nCategoricalRasterWrap(r::Raster; kernel)\nA GeoSurrogate for categorical rasters using kernel smoothing. Here, “categorical raster” refers to a raster where its numerical data is associated with discrete categories (e.g. land cover types).\n\n\n\n\nGeomWrap\n\n\nGeomWrap(geometry; kernel)\nA GeoSurrogate representing a geometry. Coordinates contained in the geometry will result in predict(::GeomWrap, coords)) == 1.0. Coordinates “far” will be 0.0. “Near” coordinates are determined by the kernel function evaluated at the distance between the coordinate and the geometry.\n\n\n\n\nIDW\n\n\nIDW(r::Raster; power=2)\nInverse Distance Weighting surrogate. Predicts values as a weighted average of known data points, where weights are inversely proportional to the distance raised to power.\n\nExamples\nmodel = IDW(raster)\npredict(model, (x, y))\npredict(model, raster)\n\n\n\n\n\nLinReg\n\n\nNo documentation found for public binding GeoSurrogates.LinReg.\n\nSummary\nstruct GeoSurrogates.LinReg{F&lt;:StatsModels.FormulaTerm, T&lt;:Number}\n\n\nFields\nformula :: F&lt;:StatsModels.FormulaTerm\nβ       :: Array{T&lt;:Number, 1}\n\n\nSupertype Hierarchy\nGeoSurrogates.LinReg{F&lt;:StatsModels.FormulaTerm, T&lt;:Number} &lt;: GeoSurrogates.GeoSurrogate &lt;: Any\n\n\n\n\n\nRBF\n\n\nRBF(r::Raster; kernel=:gaussian, epsilon=1.0, poly_degree=0)\nRadial Basis Function surrogate. Interpolates scattered data using a kernel applied to pairwise distances. Set poly_degree=1 to augment with a linear polynomial term.\nAvailable kernels: :gaussian, :multiquadric, :inverse_multiquadric, :linear, :cubic, :thin_plate_spline.\n\nExamples\nmodel = RBF(raster; kernel=:gaussian, epsilon=1.0)\npredict(model, (x, y))\n\n\n\n\n\nRasterWrap\n\n\nRasterWrap(r::Raster; int = BSpline(Linear()), ext = nothing)\nA GeoSurrogate with interpolation (and optional extrapolation).\n\n\n\n\nTPS\n\n\nTPS(r::Raster; regularization=0.0)\nThin Plate Spline surrogate. Always includes an affine term (a₀ + a₁x + a₂y). Set regularization &gt; 0 for smoothing instead of exact interpolation.\n\nExamples\nmodel = TPS(raster)\npredict(model, (x, y))",
+    "crumbs": [
+      "API",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>API</span>"
+    ]
+  },
+  {
+    "objectID": "api.html#functions",
+    "href": "api.html#functions",
+    "title": "API",
+    "section": "Functions",
+    "text": "Functions\n\nfit! {#fit!}\n\n\nFit a statistical model in-place.\nfit!(model::WindSIREN, x::AbstractMatrix, y::AbstractMatrix; steps=1)\nTrain the model on coordinate-value pairs.\n\nx: 2×N matrix of normalized (x, y) coordinates\ny: 2×N matrix of (u, v) wind components\n\nReturns the fitted model.\nfit!(model::WindSIREN, u::Raster, v::Raster; steps=1)\nTrain the model on u and v wind component rasters. Rasters must be normalized before fitting.\nReturns the fitted model.\nfit!(model::WindSIREN, uv::RasterStack; steps=1)\nTrain the model on a RasterStack containing :u and :v layers.\nReturns the fitted model.\nfit!(model::CatSIREN, x::AbstractMatrix, y::AbstractMatrix; steps=1)\nTrain the model on coordinate-value pairs.\n\nx: 2×N matrix of normalized (x, y) coordinates\ny: n_classes×N one-hot encoded matrix\n\nReturns the fitted model.\nfit!(model::CatSIREN, r::Raster; steps=1)\nTrain the model on a categorical raster. The raster values should be categorical labels (integers or any comparable type).\nReturns the fitted model.\n\n\n\n\ngaussian\n\n\nNo documentation found for public binding GeoSurrogates.gaussian.\nGeoSurrogates.gaussian is a Function.\n# 1 method for generic function \"gaussian\" from GeoSurrogates:\n [1] gaussian(u, k)\n     @ ~/work/GeoSurrogates.jl/GeoSurrogates.jl/src/GeoSurrogates.jl:466\n\n\n\n\nnormalize\n\n\nNo documentation found for public binding GeoSurrogates.normalize.\nGeoSurrogates.normalize is a Function.\n# 5 methods for generic function \"normalize\" from GeoSurrogates:\n [1] normalize(r::Rasters.Raster)\n     @ ~/work/GeoSurrogates.jl/GeoSurrogates.jl/src/GeoSurrogates.jl:31\n [2] normalize(x::AbstractArray{&lt;:Union{Missing, Number}})\n     @ ~/work/GeoSurrogates.jl/GeoSurrogates.jl/src/GeoSurrogates.jl:18\n [3] normalize(dim::DimensionalData.Dimensions.Dimension)\n     @ ~/work/GeoSurrogates.jl/GeoSurrogates.jl/src/GeoSurrogates.jl:29\n [4] normalize(nt::NamedTuple)\n     @ ~/work/GeoSurrogates.jl/GeoSurrogates.jl/src/GeoSurrogates.jl:37\n [5] normalize(x)\n     @ ~/work/GeoSurrogates.jl/GeoSurrogates.jl/src/GeoSurrogates.jl:27\n\n\n\n\npredict\n\n\npredict(model::RegressionModel, [newX])\nForm the predicted response of model. An object with new covariate values newX can be supplied, which should have the same type and structure as that used to fit model; e.g. for a GLM it would generally be a DataFrame with the same variable names as the original predictors.\npredict(model::WindSIREN, x::AbstractMatrix) -&gt; Matrix{Float32}\nPredict wind components (u, v) for input coordinates. Input x should be a 2×N matrix of normalized coordinates. Returns a 2×N matrix where row 1 is u and row 2 is v.\npredict(model::WindSIREN, coords::Tuple) -&gt; Tuple{Float32, Float32}\nPredict wind components (u, v) for a single coordinate tuple (x, y). Returns (u, v) tuple.\npredict(model::WindSIREN, r::Raster) -&gt; Tuple{Raster, Raster}\nPredict wind components for all coordinates in a raster. Returns tuple of (uraster, vraster).\npredict(model::CatSIREN, x::AbstractMatrix) -&gt; Matrix{Float32}\nPredict class probabilities for input coordinates. Input x should be a 2×N matrix of normalized coordinates. Returns an n_classes×N matrix of probabilities (columns sum to 1).\npredict(model::CatSIREN, coords::Tuple) -&gt; Dict\nPredict class probabilities for a single coordinate tuple (x, y). Returns a Dict mapping class labels to probabilities.\npredict(model::CatSIREN, r::Raster) -&gt; Raster\nPredict class probabilities for all coordinates in a raster. Returns a Raster where each cell contains a Dict mapping class labels to probabilities.",
+    "crumbs": [
+      "API",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>API</span>"
+    ]
+  },
+  {
+    "objectID": "api.html#constants",
+    "href": "api.html#constants",
+    "title": "API",
+    "section": "Constants",
+    "text": "Constants\n\nCatSIREN\n\n\nCatSIREN(n_classes; kwargs...)\nA SIREN (Sinusoidal Representation Network) for creating implicit neural representations of categorical raster data (e.g., Landfire fuel models). Uses periodic sine activations with a softmax output layer to ensure predictions sum to 1.\n\nArguments\n\nn_classes::Int: Number of output classes (required)\n\n\n\nKeyword Arguments\n\nin::Int = 2: Input dimension (typically 2 for x, y coordinates)\nhidden::Int = 256: Number of hidden units per layer\nn_hidden::Int = 3: Number of hidden layers\nω0::Float32 = 30f0: Frequency scaling for first layer\nωh::Float32 = 1f0: Frequency scaling for hidden layers\nrng::AbstractRNG = Random.MersenneTwister(42): Random number generator\nalg = Adam(0.0001f0): Optimizer algorithm\n\n\n\nExample\n# For a categorical raster with 10 unique classes\nmodel = CatSIREN(10)\nfit!(model, categorical_raster; steps=1000)\nprobs = predict(model, test_raster)  # Returns raster of probability vectors\n\n\nReferences\n\nSitzmann et al. “Implicit Neural Representations with Periodic Activation Functions” (2020)\n\nCatSIREN(r::Raster; kwargs...)\nCreate a CatSIREN model from a categorical raster, automatically determining the number of classes from the unique values in the raster.\n\n\n\n\n\nImplicitTerrain\n\n\nNo docstring found for public module GeoSurrogates.ImplicitTerrain. Module does not have any public names.\n\nPackage description from README.md:    \n\nGeoSurrogates.jl\n\nUsage\nusing GeoSurrogates, Rasters\n\nr = Raster(...)\n\nrw = GeoSurrogates.RasterWrap(r)\n\npredict(rw, x, y)  # Linear Interpolation\n\n\n\n\n\n\nWindSurrogate\n\n\nNo docstring found for public module GeoSurrogates.WindSurrogate. Module does not have any public names.\n\nPackage description from README.md:    \n\nGeoSurrogates.jl\n\nUsage\nusing GeoSurrogates, Rasters\n\nr = Raster(...)\n\nrw = GeoSurrogates.RasterWrap(r)\n\npredict(rw, x, y)  # Linear Interpolation",
+    "crumbs": [
+      "API",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>API</span>"
+    ]
+  },
+  {
     "objectID": "api.html#usage",
     "href": "api.html#usage",
     "title": "API",
     "section": "Usage",
     "text": "Usage\nusing GeoSurrogates, Rasters\n\nr = Raster(...)\n\nrw = GeoSurrogates.RasterWrap(r)\n\npredict(rw, x, y)  # Linear Interpolation",
     "crumbs": [
-      "Docs",
+      "API",
       "<span class='chapter-number'>4</span>  <span class='chapter-title'>API</span>"
     ]
   },
@@ -204,7 +248,7 @@
     "section": "Usage",
     "text": "Usage\nusing GeoSurrogates, Rasters\n\nr = Raster(...)\n\nrw = GeoSurrogates.RasterWrap(r)\n\npredict(rw, x, y)  # Linear Interpolation",
     "crumbs": [
-      "Docs",
+      "API",
       "<span class='chapter-number'>4</span>  <span class='chapter-title'>API</span>"
     ]
   },
