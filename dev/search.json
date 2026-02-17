@@ -262,5 +262,16 @@
       "Reference",
       "<span class='chapter-number'>5</span>  <span class='chapter-title'>Changelog</span>"
     ]
+  },
+  {
+    "objectID": "changelog.html#v0.1.0",
+    "href": "changelog.html#v0.1.0",
+    "title": "Changelog",
+    "section": "v0.1.0",
+    "text": "v0.1.0\nInitial release of GeoSurrogates.jl.\n\nFeatures\n\nClassical surrogate models: LinReg, IDW, RBF, TPS, RasterWrap, CategoricalRasterWrap, GeomWrap\nNeural network surrogates: ImplicitTerrain (cascaded SIREN), WindSurrogate (vector fields), CatSIREN (categorical classification)\nAdditiveModel for boosting-style composite surrogates\nSeamless Rasters.jl integration with CRS/extent preservation\nNormalization utilities for preparing data\nQuarto documentation with versioned deployment",
+    "crumbs": [
+      "Reference",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Changelog</span>"
+    ]
   }
 ]

@@ -379,6 +379,10 @@ ul.task-list li input[type="checkbox"] {
    
   <ul>
   <li><a href="#unreleased" id="toc-unreleased" class="nav-link active" data-scroll-target="#unreleased">Unreleased</a></li>
+  <li><a href="#v0.1.0" id="toc-v0.1.0" class="nav-link" data-scroll-target="#v0.1.0">v0.1.0</a>
+  <ul class="collapse">
+  <li><a href="#features" id="toc-features" class="nav-link" data-scroll-target="#features">Features</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -407,8 +411,23 @@ ul.task-list li input[type="checkbox"] {
 
 <section id="unreleased" class="level2">
 <h2 class="anchored" data-anchor-id="unreleased">Unreleased</h2>
+</section>
+<section id="v0.1.0" class="level2">
+<h2 class="anchored" data-anchor-id="v0.1.0">v0.1.0</h2>
+<p>Initial release of GeoSurrogates.jl.</p>
+<section id="features" class="level3">
+<h3 class="anchored" data-anchor-id="features">Features</h3>
+<ul>
+<li>Classical surrogate models: LinReg, IDW, RBF, TPS, RasterWrap, CategoricalRasterWrap, GeomWrap</li>
+<li>Neural network surrogates: ImplicitTerrain (cascaded SIREN), WindSurrogate (vector fields), CatSIREN (categorical classification)</li>
+<li>AdditiveModel for boosting-style composite surrogates</li>
+<li>Seamless Rasters.jl integration with CRS/extent preservation</li>
+<li>Normalization utilities for preparing data</li>
+<li>Quarto documentation with versioned deployment</li>
+</ul>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->
