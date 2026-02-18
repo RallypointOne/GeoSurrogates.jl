@@ -98,8 +98,7 @@ eval_steps = Int[]
 
 @time for step in 1:eval_interval:n_steps
     chunk_size = min(eval_interval, n_steps - step + 1)
-    chunk_losses = fit!(model, r; steps=chunk_size)
-    append!(losses, chunk_losses)
+    fit!(model, r; steps=chunk_size, losses)
 
     # Compute accuracy on training data
     pred_classes = GeoSurrogates.CatSIREN.predict_class(model, r)
@@ -171,6 +170,7 @@ center_x_norm = median(x_norm)
 center_y_norm = median(y_norm)
 
 probs = predict(model, (center_x_norm, center_y_norm))
+prob_values = [probs[c] for c in model.classes]
 
 # Plot probability distribution
 fig_probs = Figure(size=(900, 400))
@@ -181,12 +181,12 @@ ax_probs = Axis(fig_probs[1, 1],
     xticks=(1:length(model.classes), legend_labels),
     xticklabelrotation=π/4
 )
-barplot!(ax_probs, 1:length(probs), probs, color=[colors[i] for i in 1:length(probs)])
+barplot!(ax_probs, 1:length(prob_values), prob_values, color=[colors[i] for i in 1:length(prob_values)])
 
 save(joinpath(@__DIR__, "categorical_probabilities.png"), fig_probs)
 display(fig_probs)
 
-@info "Sum of probabilities: $(sum(probs))"  # Should be 1.0
+@info "Sum of probabilities: $(sum(prob_values))"  # Should be 1.0
 
 #-----------------------------------------------------------------------------# Higher resolution prediction
 @info "Creating high-resolution prediction..."

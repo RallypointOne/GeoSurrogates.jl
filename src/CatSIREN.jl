@@ -206,36 +206,39 @@ const LOSS_CE = CrossEntropyLoss()
 
 #-----------------------------------------------------------------------------# fit!
 """
-    fit!(model::CatSIREN, x::AbstractMatrix, y::AbstractMatrix; steps=1)
+    fit!(model::CatSIREN, x::AbstractMatrix, y::AbstractMatrix; steps=1, losses=nothing)
 
 Train the model on coordinate-value pairs.
 - `x`: 2×N matrix of normalized (x, y) coordinates
 - `y`: n_classes×N one-hot encoded matrix
+- `losses`: Optional vector to collect per-step loss values
 
 Returns the fitted model.
 """
-function fit!(o::CatSIREN, x::AbstractMatrix, y::AbstractMatrix; steps = 1)
+function fit!(o::CatSIREN, x::AbstractMatrix, y::AbstractMatrix; steps = 1, losses = nothing)
     ts = o.train_state
     for _ in 1:steps
-        _, _, _, ts = Lux.Training.single_train_step!(BACKEND, LOSS_CE, (x, y), ts)
+        _, loss, _, ts = Lux.Training.single_train_step!(BACKEND, LOSS_CE, (x, y), ts)
+        isnothing(losses) || push!(losses, loss)
     end
     o.train_state = ts
     return o
 end
 
 """
-    fit!(model::CatSIREN, r::Raster; steps=1)
+    fit!(model::CatSIREN, r::Raster; steps=1, losses=nothing)
 
 Train the model on a categorical raster.
 The raster values should be categorical labels (integers or any comparable type).
+Pass a vector for `losses` to collect per-step loss values.
 
 Returns the fitted model.
 """
-function fit!(o::CatSIREN, r::Raster; steps = 1)
+function fit!(o::CatSIREN, r::Raster; steps = 1, losses = nothing)
     x = features(r)
     labels = vec(r.data)
     y = onehot(labels, o.classes)
-    return fit!(o, x, y; steps=steps)
+    return fit!(o, x, y; steps, losses)
 end
 
 #-----------------------------------------------------------------------------# Constructor from Raster

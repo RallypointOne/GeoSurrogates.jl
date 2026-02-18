@@ -42,7 +42,7 @@ display(fig_orig)
 @info "Creating CategoricalRasterWrap with kernel smoothing..."
 crw = GeoSurrogates.CategoricalRasterWrap(r)
 
-@info "CategoricalRasterWrap created" n_categories=length(crw.dict)
+@info "CategoricalRasterWrap created" n_categories=length(crw.geomwraps)
 
 #-----------------------------------------------------------------------------# Predictions
 @info "Generating predictions (this may take a moment)..."

@@ -67,7 +67,7 @@ function features(r::Raster)
 end
 
 #-----------------------------------------------------------------------------# fit!
-function fit!(o::MLP, x::AbstractMatrix, y::AbstractVector; steps = 1, batchsize = nothing)
+function fit!(o::MLP, x::AbstractMatrix, y::AbstractVector; steps = 1, batchsize = nothing, losses = nothing)
     ts = o.train_state
     n = size(x, 2)
     bs = isnothing(batchsize) ? n : min(batchsize, n)
@@ -76,7 +76,8 @@ function fit!(o::MLP, x::AbstractMatrix, y::AbstractVector; steps = 1, batchsize
         # Full-batch training
         y_row = y'
         for _ in 1:steps
-            _, _, _, ts = Lux.Training.single_train_step!(BACKEND, LOSS_FN, (x, y_row), ts)
+            _, loss, _, ts = Lux.Training.single_train_step!(BACKEND, LOSS_FN, (x, y_row), ts)
+            isnothing(losses) || push!(losses, loss)
         end
     else
         # Mini-batch training
@@ -85,18 +86,19 @@ function fit!(o::MLP, x::AbstractMatrix, y::AbstractVector; steps = 1, batchsize
             rand!(idxs, 1:n)
             x_batch = @view x[:, idxs]
             y_batch = reshape(@view(y[idxs]), 1, :)
-            _, _, _, ts = Lux.Training.single_train_step!(BACKEND, LOSS_FN, (x_batch, y_batch), ts)
+            _, loss, _, ts = Lux.Training.single_train_step!(BACKEND, LOSS_FN, (x_batch, y_batch), ts)
+            isnothing(losses) || push!(losses, loss)
         end
     end
     o.train_state = ts
     return o
 end
 
-function fit!(o::MLP, r::Raster; steps = 1, batchsize = nothing)
+function fit!(o::MLP, r::Raster; steps = 1, batchsize = nothing, losses = nothing)
     is_normalized(r) || error("Raster must be normalized (see GeoSurrogates.normalize) before fitting.")
     x = features(r)
     y = r.data isa AbstractArray{Float32} ? vec(r.data) : Float32.(vec(r.data))
-    return fit!(o, x, y; steps, batchsize)
+    return fit!(o, x, y; steps, batchsize, losses)
 end
 
 
@@ -117,12 +119,12 @@ end
 
 #-----------------------------------------------------------------------------# fit!
 # Here steps == steps per pyramid level
-function fit!(o::Model, r::Raster; steps = 1000, batchsize = nothing)
+function fit!(o::Model, r::Raster; steps = 1000, batchsize = nothing, losses = nothing)
     pyr = _gaussian_pyramid(r)
     # Fit surface model progressively on pyramid levels (coarse to fine)
     for (i, level) in enumerate(reverse(@view(pyr[2:end])))
         @info "Fitting surface model on pyramid level $i/$(length(pyr) - 1) with size $(size(level))"
-        fit!(o.surface, level; steps, batchsize)
+        fit!(o.surface, level; steps, batchsize, losses)
     end
     # Compute residuals: original - surface_prediction
     full_res = first(pyr)
@@ -131,7 +133,7 @@ function fit!(o::Model, r::Raster; steps = 1000, batchsize = nothing)
     y_residuals = Float32.(vec(full_res.data)) .- vec(surface_pred)
     # Fit geometry model on residuals to capture fine details
     @info "Fitting geometry model on residuals with size $(size(full_res))" residual_range=extrema(y_residuals)
-    fit!(o.geometry, x, y_residuals; steps, batchsize)
+    fit!(o.geometry, x, y_residuals; steps, batchsize, losses)
     return o
 end
 

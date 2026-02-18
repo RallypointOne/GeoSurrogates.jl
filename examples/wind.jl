@@ -133,8 +133,7 @@ eval_steps = Int[]
 
 @time for step in 1:eval_interval:n_steps
     chunk_size = min(eval_interval, n_steps - step + 1)
-    chunk_losses = fit!(model, u_norm, v_norm; steps=chunk_size)
-    append!(losses, chunk_losses)
+    fit!(model, u_norm, v_norm; steps=chunk_size, losses)
 
     # Compute MAE on training data
     u_pred_eval, v_pred_eval = predict(model, u_norm)
@@ -159,17 +158,12 @@ display(fig_loss)
 #-----------------------------------------------------------------------------# Predictions
 @info "Generating predictions..."
 
-# Create higher resolution raster for predictions (4x resolution)
-orig_size = size(u_norm)
-hires_size = orig_size .* 4
-u_norm_hires = resample(u_norm, size=hires_size)
-u_pred, v_pred = predict(model, u_norm_hires)
+# Predict on the original grid
+u_pred, v_pred = predict(model, u_norm)
 
-# Calculate errors (resample original to match prediction resolution)
-u_norm_compare = resample(u_norm, size=hires_size)
-v_norm_compare = resample(v_norm, size=hires_size)
-u_error = u_norm_compare .- u_pred
-v_error = v_norm_compare .- v_pred
+# Calculate errors
+u_error = u_norm .- u_pred
+v_error = v_norm .- v_pred
 
 @info "Prediction errors:" u_mae=mean(abs.(skipmissing(u_error))) v_mae=mean(abs.(skipmissing(v_error)))
 
