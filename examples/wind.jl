@@ -158,7 +158,7 @@ display(fig_loss)
 #-----------------------------------------------------------------------------# Predictions
 @info "Generating predictions..."
 
-# Predict on the original grid
+# Predict on the original grid (for error metrics)
 u_pred, v_pred = predict(model, u_norm)
 
 # Calculate errors
@@ -167,63 +167,63 @@ v_error = v_norm .- v_pred
 
 @info "Prediction errors:" u_mae=mean(abs.(skipmissing(u_error))) v_mae=mean(abs.(skipmissing(v_error)))
 
+# Predict on a higher-resolution grid to demonstrate super-resolution capability
+hires_scale = 4
+nx, ny = size(u_norm)
+ext = GI.extent(u_norm)
+hires_xs = range(ext.X[1], ext.X[2], length=nx * hires_scale)
+hires_ys = range(ext.Y[1], ext.Y[2], length=ny * hires_scale)
+hires_template = Raster(zeros(Float32, length(hires_xs), length(hires_ys)), (X(hires_xs), Y(hires_ys)))
+@info "Predicting on $(nx * hires_scale)×$(ny * hires_scale) high-resolution grid..."
+u_pred_hires, v_pred_hires = predict(model, hires_template)
+
 #-----------------------------------------------------------------------------# Visualization
 @info "Creating visualization..."
 
-fig = Figure(size=(1200, 800))
+fig = Figure(size=(1400, 700))
 
-# Original u component
-ax1 = Axis(fig[1, 1], title="U (original)", aspect=DataAspect())
-hm1 = heatmap!(ax1, u_norm)
-Colorbar(fig[1, 2], hm1)
+# Shared color range (data is already normalized to [-1, 1])
+clims = (-1f0, 1f0)
 
-# Predicted u component
-ax2 = Axis(fig[1, 3], title="U (predicted)", aspect=DataAspect())
-hm2 = heatmap!(ax2, u_pred)
-Colorbar(fig[1, 4], hm2)
-
-# Original v component
-ax3 = Axis(fig[2, 1], title="V (original)", aspect=DataAspect())
-hm3 = heatmap!(ax3, v_norm)
-Colorbar(fig[2, 2], hm3)
-
-# Predicted v component
-ax4 = Axis(fig[2, 3], title="V (predicted)", aspect=DataAspect())
-hm4 = heatmap!(ax4, v_pred)
-Colorbar(fig[2, 4], hm4)
-
-# Wind vector field comparison (subsampled for visibility)
-ax5 = Axis(fig[3, 1:2], title="Wind vectors (original)", aspect=DataAspect())
-ax6 = Axis(fig[3, 3:4], title="Wind vectors (predicted)", aspect=DataAspect())
-
-# Get coordinates for quiver plot
+# Build arrow data for both panels
 df = DataFrame(u_norm)
 xs = unique(df.X)
 ys = unique(df.Y)
-
-# Subsample for cleaner quiver plot
 step_x = max(1, length(xs) ÷ 20)
 step_y = max(1, length(ys) ÷ 20)
-
-xs_sub = xs[1:step_x:end]
-ys_sub = ys[1:step_y:end]
-
-# Create meshgrid points
-pts = [(x, y) for x in xs_sub, y in ys_sub]
+pts = [(x, y) for x in xs[1:step_x:end], y in ys[1:step_y:end]]
 coords_x = [p[1] for p in pts]
 coords_y = [p[2] for p in pts]
-
-# Get wind vectors at subsampled points
 u_orig_vec = [u_norm[X=Near(x), Y=Near(y)] for (x, y) in pts]
 v_orig_vec = [v_norm[X=Near(x), Y=Near(y)] for (x, y) in pts]
-u_pred_vec = [u_pred[X=Near(x), Y=Near(y)] for (x, y) in pts]
-v_pred_vec = [v_pred[X=Near(x), Y=Near(y)] for (x, y) in pts]
 
-# Plot quiver
-arrows2d!(ax5, vec(coords_x), vec(coords_y), vec(u_orig_vec), vec(v_orig_vec),
-          lengthscale=0.04)
-arrows2d!(ax6, vec(coords_x), vec(coords_y), vec(u_pred_vec), vec(v_pred_vec),
-          lengthscale=0.04)
+xs_hires = collect(hires_xs)
+ys_hires = collect(hires_ys)
+step_x_hires = max(1, length(xs_hires) ÷ 20)
+step_y_hires = max(1, length(ys_hires) ÷ 20)
+pts_hires = [(x, y) for x in xs_hires[1:step_x_hires:end], y in ys_hires[1:step_y_hires:end]]
+coords_x_hires = [p[1] for p in pts_hires]
+coords_y_hires = [p[2] for p in pts_hires]
+u_pred_vec_hires = [u_pred_hires[X=Near(x), Y=Near(y)] for (x, y) in pts_hires]
+v_pred_vec_hires = [v_pred_hires[X=Near(x), Y=Near(y)] for (x, y) in pts_hires]
+
+# Row 1: Original — U | V | wind vectors
+ax1 = Axis(fig[1, 1], title="U (original)", aspect=DataAspect())
+hm1 = heatmap!(ax1, u_norm; colorrange=clims)
+ax2 = Axis(fig[1, 2], title="V (original)", aspect=DataAspect())
+heatmap!(ax2, v_norm; colorrange=clims)
+Colorbar(fig[1, 3], hm1)
+ax5 = Axis(fig[1, 4], title="Wind vectors (original)", aspect=DataAspect())
+arrows2d!(ax5, vec(coords_x), vec(coords_y), vec(u_orig_vec), vec(v_orig_vec), lengthscale=0.04)
+
+# Row 2: Predicted — U | V | wind vectors
+ax3 = Axis(fig[2, 1], title="U (predicted, $(hires_scale)× resolution)", aspect=DataAspect())
+hm3 = heatmap!(ax3, u_pred_hires; colorrange=clims)
+ax4 = Axis(fig[2, 2], title="V (predicted, $(hires_scale)× resolution)", aspect=DataAspect())
+heatmap!(ax4, v_pred_hires; colorrange=clims)
+Colorbar(fig[2, 3], hm3)
+ax6 = Axis(fig[2, 4], title="Wind vectors (predicted, $(hires_scale)× resolution)", aspect=DataAspect())
+arrows2d!(ax6, vec(coords_x_hires), vec(coords_y_hires), vec(u_pred_vec_hires), vec(v_pred_vec_hires), lengthscale=0.04)
 
 save(joinpath(@__DIR__, "wind_comparison.png"), fig)
 @info "Displaying figure..."
@@ -234,12 +234,11 @@ display(fig)
 fig_u = Figure(size=(500, 700))
 
 ax_u1 = Axis(fig_u[1, 1], title="U (original)", aspect=DataAspect())
-hm_u1 = heatmap!(ax_u1, u_norm)
-Colorbar(fig_u[1, 2], hm_u1)
+hm_u1 = heatmap!(ax_u1, u_norm; colorrange=clims)
 
-ax_u2 = Axis(fig_u[2, 1], title="U (predicted)", aspect=DataAspect())
-hm_u2 = heatmap!(ax_u2, u_pred)
-Colorbar(fig_u[2, 2], hm_u2)
+ax_u2 = Axis(fig_u[2, 1], title="U (predicted, $(hires_scale)× resolution)", aspect=DataAspect())
+heatmap!(ax_u2, u_pred_hires; colorrange=clims)
+Colorbar(fig_u[1:2, 2], hm_u1)
 
 save(joinpath(@__DIR__, "wind_u_comparison.png"), fig_u)
 display(fig_u)
