@@ -45,6 +45,17 @@ function normalize!(df::DataFrame)
     return df
 end
 
+#-----------------------------------------------------------------------------# rasterdf
+# `DataFrame(::Raster)` names the value column after the raster (`layer1` in Rasters 0.14,
+# `value` in 0.15) and, since 0.15, emits a column per refdim as well. Canonicalize to the
+# spatial dims plus `layer1` so column access and user formulas work across both versions.
+function rasterdf(r::Raster)
+    df = DataFrame(r)
+    dimnames = map(DD.name, DD.dims(r))
+    value = only(setdiff(propertynames(df), dimnames, map(DD.name, DD.refdims(r))))
+    return select(df, dimnames..., value => :layer1)
+end
+
 #-----------------------------------------------------------------------------# GeoSurrogate
 abstract type GeoSurrogate end
 
@@ -103,7 +114,7 @@ end
 Base.show(io::IO, o::LinReg) = print(io, "LinReg: ", o.formula)
 
 function LinReg(r::Raster, formula = @formula(layer1 ~ 1 + X * Y ))
-    df = dropmissing!(DataFrame(r))
+    df = dropmissing!(rasterdf(r))
     f = apply_schema(formula, schema(formula, df))
     y, x = modelcols(f, df)
     β = x \ y
@@ -119,7 +130,7 @@ function predict(o::LinReg, coords::Tuple)
 end
 
 function predict(o::LinReg, r::Raster)
-    df = DataFrame(r)
+    df = rasterdf(r)
     X = modelmatrix(o.formula, df)
     ẑ = X * o.β
     Raster(reshape(ẑ, size(r)), dims=DD.dims(r))
@@ -148,7 +159,7 @@ struct IDW{T <: AbstractFloat} <: GeoSurrogate
 end
 
 function IDW(r::Raster; power=2)
-    df = dropmissing!(DataFrame(r))
+    df = dropmissing!(rasterdf(r))
     T = promote_type(eltype(df.X), eltype(df.Y), eltype(df.layer1), typeof(float(power)))
     IDW(T.(df.X), T.(df.Y), T.(df.layer1), T(power))
 end
@@ -222,7 +233,7 @@ struct RBF{T <: AbstractFloat, K} <: GeoSurrogate
 end
 
 function RBF(r::Raster; kernel=:gaussian, epsilon=1.0, poly_degree=0)
-    df = dropmissing!(DataFrame(r))
+    df = dropmissing!(rasterdf(r))
     T = promote_type(eltype(df.X), eltype(df.Y), eltype(df.layer1), typeof(float(epsilon)))
     xs = T.(df.X)
     ys = T.(df.Y)
@@ -299,7 +310,7 @@ struct TPS{T <: AbstractFloat} <: GeoSurrogate
 end
 
 function TPS(r::Raster; regularization=0.0)
-    df = dropmissing!(DataFrame(r))
+    df = dropmissing!(rasterdf(r))
     T = promote_type(eltype(df.X), eltype(df.Y), eltype(df.layer1), typeof(float(regularization)))
     xs = T.(df.X)
     ys = T.(df.Y)
@@ -402,7 +413,7 @@ struct CategoricalRasterWrap{R, T, G, K} <: GeoSurrogate
     kernel::K
 end
 function CategoricalRasterWrap(r::Raster; kernel = Base.Fix2(gaussian, 4))
-    df = DataFrame(r)
+    df = rasterdf(r)
     gdf = groupby(df, :layer1)
     # Pre-create GeomWrap objects for each class to avoid repeated allocation
     geomwraps = Dict(

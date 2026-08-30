@@ -39,6 +39,9 @@ end
     df = dropmissing!(DataFrame(elev))
     df2 = GeoSurrogates.normalize!(df)
     for col in names(df2)
+        # `normalize` passes non-numeric columns through untouched (Rasters 0.15 emits a
+        # String `Band` column), so only numeric columns are expected to be in [-1, 1].
+        eltype(df2[!, col]) <: Number || continue
         @test GeoSurrogates.is_normalized(df2[!, col])
     end
 
