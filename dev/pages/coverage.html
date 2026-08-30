@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>GeoSurrogates.jl</title>
+<title>Coverage – GeoSurrogates.jl</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -26,62 +26,27 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
 </style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/quarto-nav/headroom.min.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<link href="./pages/getting-started.html" rel="next">
-<script src="site_libs/quarto-html/quarto.js" type="module"></script>
-<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-73b0ff3878a4e6fc3716dc69a6aaefa3.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-75457b1ed21a3fdd221c49358c654c3f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../pages/api.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-73b0ff3878a4e6fc3716dc69a6aaefa3.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-75457b1ed21a3fdd221c49358c654c3f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -108,7 +73,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 }</script>
 
 
-<link rel="stylesheet" href="assets/styles.css">
+<link rel="stylesheet" href="../assets/styles.css">
 </head>
 
 <body class="nav-sidebar floating nav-fixed quarto-light">
@@ -119,8 +84,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a href="https://rallypoint1.com" class="navbar-brand navbar-brand-logo">
-    <img src="./assets/logo.svg" alt="" class="navbar-logo light-content">
-    <img src="./assets/logo.svg" alt="" class="navbar-logo dark-content">
+    <img src="../assets/logo.svg" alt="" class="navbar-logo light-content">
+    <img src="../assets/logo.svg" alt="" class="navbar-logo dark-content">
     </a>
     <a class="navbar-brand" href="https://rallypoint1.com">
     <span class="navbar-title">GeoSurrogates.jl</span>
@@ -152,7 +117,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./index.html">Docs</a></li><li class="breadcrumb-item"><a href="./index.html"><span class="chapter-title">GeoSurrogates.jl</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../pages/coverage.html">Resources</a></li><li class="breadcrumb-item"><a href="../pages/coverage.html"><span class="chapter-title">Coverage</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -183,17 +148,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./index.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">GeoSurrogates.jl</span></a>
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">GeoSurrogates.jl</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./pages/getting-started.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Getting Started</span></a>
+  <a href="../pages/getting-started.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Getting Started</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./pages/examples.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Examples</span></a>
+  <a href="../pages/examples.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Examples</span></a>
   </div>
 </li>
       </ul>
@@ -209,7 +174,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./pages/api.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">API</span></a>
+  <a href="../pages/api.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">API</span></a>
   </div>
 </li>
       </ul>
@@ -225,7 +190,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./pages/coverage.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Coverage</span></a>
+  <a href="../pages/coverage.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Coverage</span></a>
   </div>
 </li>
       </ul>
@@ -235,26 +200,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
-    <h2 id="toc-title">Table of contents</h2>
-   
-  <ul>
-  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
-  <li><a href="#quickstart" id="toc-quickstart" class="nav-link" data-scroll-target="#quickstart">Quickstart</a></li>
-  <li><a href="#features" id="toc-features" class="nav-link" data-scroll-target="#features">Features</a></li>
-  <li><a href="#surrogate-types" id="toc-surrogate-types" class="nav-link" data-scroll-target="#surrogate-types">Surrogate Types</a></li>
-  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
-  </ul>
-</nav>
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+        
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./index.html">Docs</a></li><li class="breadcrumb-item"><a href="./index.html"><span class="chapter-title">GeoSurrogates.jl</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../pages/coverage.html">Resources</a></li><li class="breadcrumb-item"><a href="../pages/coverage.html"><span class="chapter-title">Coverage</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">GeoSurrogates.jl</h1>
-<p class="subtitle lead">Implicit Neural Representations for Geospatial Data</p>
+<h1 class="title"><span class="chapter-title">Coverage</span></h1>
 </div>
 
 
@@ -271,105 +225,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="overview" class="level2">
-<h2 class="anchored" data-anchor-id="overview">Overview</h2>
-<p><strong>GeoSurrogates.jl</strong> is a Julia package for creating surrogate models of geospatial data. It provides multiple approaches to learn continuous functions from spatial raster data, leveraging both classical methods and neural networks to create compact, efficient representations of geographic phenomena.</p>
-</section>
-<section id="quickstart" class="level2">
-<h2 class="anchored" data-anchor-id="quickstart">Quickstart</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">Pkg</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">Pkg</span>.<span class="fu">add</span>(<span class="st">"GeoSurrogates"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">GeoSurrogates</span>, <span class="bu">Rasters</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Load a raster</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>elev <span class="op">=</span> <span class="fu">Raster</span>(<span class="st">"path/to/elevation.tif"</span>)</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a simple interpolation-based surrogate</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>surrogate <span class="op">=</span> <span class="fu">RasterWrap</span>(elev)</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Predict at any coordinate</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(surrogate, (<span class="op">-</span><span class="fl">105.5</span>, <span class="fl">40.2</span>))</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Or create a neural network surrogate for compression</span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> ImplicitTerrain.<span class="fu">Model</span>()</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="fu">fit!</span>(model, <span class="fu">normalize</span>(elev); steps<span class="op">=</span><span class="fl">1000</span>)</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Predict on a new raster grid</span></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>predicted <span class="op">=</span> <span class="fu">predict</span>(model, new_raster)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="features" class="level2">
-<h2 class="anchored" data-anchor-id="features">Features</h2>
-<ul>
-<li><strong>Classical Surrogates</strong>: Linear regression, interpolation-based wrapping, and kernel smoothing</li>
-<li><strong>Neural Network Surrogates</strong>: SIREN (Sinusoidal Representation Networks) for terrain, wind fields, and categorical data</li>
-<li><strong>Seamless Integration</strong>: Works with the <a href="https://github.com/rafaqz/Rasters.jl">Rasters.jl</a> ecosystem</li>
-<li><strong>Arbitrary Resolution</strong>: Predict at any resolution, not just the training resolution</li>
-<li><strong>Memory Efficient</strong>: Neural networks as compact alternatives to storing full rasters</li>
-</ul>
-</section>
-<section id="surrogate-types" class="level2">
-<h2 class="anchored" data-anchor-id="surrogate-types">Surrogate Types</h2>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 20%">
-<col style="width: 44%">
-<col style="width: 34%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Type</th>
-<th>Description</th>
-<th>Use Case</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>LinReg</code></td>
-<td>Linear regression</td>
-<td>Simple trend modeling</td>
-</tr>
-<tr class="even">
-<td><code>RasterWrap</code></td>
-<td>B-spline interpolation</td>
-<td>Fast exact interpolation</td>
-</tr>
-<tr class="odd">
-<td><code>CategoricalRasterWrap</code></td>
-<td>Kernel smoothing</td>
-<td>Categorical data</td>
-</tr>
-<tr class="even">
-<td><code>GeomWrap</code></td>
-<td>Distance-based kernel</td>
-<td>Geometry influence fields</td>
-</tr>
-<tr class="odd">
-<td><code>ImplicitTerrain.Model</code></td>
-<td>Cascaded SIREN</td>
-<td>Terrain compression</td>
-</tr>
-<tr class="even">
-<td><code>WindSurrogate.WindSIREN</code></td>
-<td>SIREN for vectors</td>
-<td>Wind field modeling</td>
-</tr>
-<tr class="odd">
-<td><code>CatSIREN.CatSIREN</code></td>
-<td>SIREN with softmax</td>
-<td>Categorical classification</td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="references" class="level2">
-<h2 class="anchored" data-anchor-id="references">References</h2>
-<ul>
-<li>Sitzmann et al.&nbsp;<a href="https://arxiv.org/abs/2006.09661">“Implicit Neural Representations with Periodic Activation Functions”</a> (2020)</li>
-<li>ImplicitTerrain paper: <a href="https://arxiv.org/abs/2406.00227">https://arxiv.org/abs/2406.00227</a></li>
-</ul>
+<iframe id="coverage-iframe" src="coverage/index.html" width="100%" style="border:none; overflow:hidden;" scrolling="no">
+</iframe>
+<script>
+(function() {
+    var iframe = document.getElementById('coverage-iframe');
+    function resize() {
+        try {
+            iframe.style.height = iframe.contentDocument.documentElement.scrollHeight + 'px';
+        } catch(e) {}
+    }
+    iframe.addEventListener('load', resize);
+    window.addEventListener('resize', resize);
+})();
+</script>
 
 
-</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -774,11 +645,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
+      <a href="../pages/api.html" class="pagination-link" aria-label="API">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">API</span></span>
+      </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./pages/getting-started.html" class="pagination-link" aria-label="Getting Started">
-        <span class="nav-page-text"><span class="chapter-title">Getting Started</span></span> <i class="bi bi-arrow-right-short"></i>
-      </a>
   </div>
 </nav>
 </div> <!-- /content -->
