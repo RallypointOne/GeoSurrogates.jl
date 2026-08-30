@@ -1,0 +1,11 @@
+[deps]
+ArchGDAL = "c9ce4bd3-c3d5-55b8-8973-c0e20141b8c3"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
+GeoInterface = "cf35fbd7-0cd7-5166-be24-54bfbe79505f"
+RasterDataSources = "3cb90ccd-e1b6-4867-9617-4276c8b2ca36"
+Rasters = "a3a2b9e3-a471-40c9-b274-f788e487c689"
+StatsAPI = "82ae8749-77ed-4fe6-ae5f-f523153014b0"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
+p7zip_jll = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"

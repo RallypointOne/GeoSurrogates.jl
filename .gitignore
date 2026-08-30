@@ -2,6 +2,8 @@
 *.jl.*.cov
 *.jl.mem
 coverage/
+docs/pages/lcov.info
+docs/pages/coverage/
 Manifest.toml
 docs/Manifest.toml
 docs/build/
@@ -12,12 +14,12 @@ docs/_site
 docs/site_libs
 docs/.quarto/
 docs/*_files/
-docs/coverage/
 **/*.quarto_ipynb
+
+# Example / docs outputs
 *.html
-!docs/_version-selector.html
+!docs/assets/_version-selector.html
 data/
 *.gif
 *.geojson
 *.png
-docs/_freeze/

@@ -2,13 +2,9 @@ project:
   type: book
   output-dir: _site
 
-engine: julia
+engines: ['julia']
 julia:
   project: "."
-
-execute:
-  freeze: auto
-  timeout: 600
 
 book:
   title: "GeoSurrogates.jl"
@@ -17,6 +13,8 @@ book:
     keyboard-shortcut:
       - "/"
   navbar:
+    logo: assets/logo.svg
+    logo-href: https://rallypoint1.com
     right:
       - icon: star
         href: https://github.com/RallypointOne/GeoSurrogates.jl/stargazers
@@ -27,15 +25,14 @@ book:
     - part: "Docs"
       chapters:
         - index.qmd
-        - getting-started.qmd
-        - examples.qmd
+        - pages/getting-started.qmd
+        - pages/examples.qmd
     - part: "API"
       chapters:
-        - api.qmd
-    - part: "Reference"
+        - pages/api.qmd
+    - part: "Resources"
       chapters:
-        - changelog.qmd
-        - coverage.qmd
+        - pages/coverage.qmd
 
   page-footer:
     center: "Built on __BUILD_DATE__"
@@ -45,11 +42,10 @@ language:
 
 format:
   html:
-    css: styles.css
+    css: assets/styles.css
     number-sections: false
     theme:
-      light: flatly
-      dark: darkly
-    respect-user-color-scheme: true
+      - flatly
+      - assets/theme.scss
     include-after-body:
-      - file: _version-selector.html
+      - file: assets/_version-selector.html
