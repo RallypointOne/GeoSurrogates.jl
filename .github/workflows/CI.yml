@@ -23,9 +23,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # No 'lts': the package requires Julia >= 1.12 (a type shadows its enclosing
+        # module in src/CatSIREN.jl, which needs 1.12's constant redefinition).
         version:
           - '1'
-          - 'lts'
         os:
           - ubuntu-latest
           - windows-latest
