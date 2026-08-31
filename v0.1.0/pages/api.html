@@ -2,13 +2,16 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.8.27">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
 <title>API – GeoSurrogates.jl</title>
 <style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
 div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -58,30 +61,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/quarto-nav/headroom.min.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<link href="./changelog.html" rel="next">
-<link href="./examples.html" rel="prev">
-<script src="site_libs/quarto-html/quarto.js" type="module"></script>
-<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-4d9afe2b8d18ee9fa5d0d57b5ed4214d.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-4ff66e45b39d49436fe97d3fe27b9920.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-7e34ecb6a0e7991f0346b0751d4a7c3f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-4ff66e45b39d49436fe97d3fe27b9920.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../pages/coverage.html" rel="next">
+<link href="../pages/examples.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-96ebe82b8db4e1070ca8c51563aaef74.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-fce897e9f2beac8984fde96371fb94ce.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -108,188 +106,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 }</script>
 
 
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="../assets/styles.css">
 </head>
 
-<body class="nav-sidebar floating nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
-    const toggleBodyColorMode = (bsSheetEl) => {
-      const mode = bsSheetEl.getAttribute("data-mode");
-      const bodyEl = window.document.querySelector("body");
-      if (mode === "dark") {
-        bodyEl.classList.add("quarto-dark");
-        bodyEl.classList.remove("quarto-light");
-      } else {
-        bodyEl.classList.add("quarto-light");
-        bodyEl.classList.remove("quarto-dark");
-      }
-    }
-    const toggleBodyColorPrimary = () => {
-      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
-      if (bsSheetEl) {
-        toggleBodyColorMode(bsSheetEl);
-      }
-    }
-    const setColorSchemeToggle = (alternate) => {
-      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
-      for (let i=0; i < toggles.length; i++) {
-        const toggle = toggles[i];
-        if (toggle) {
-          if (alternate) {
-            toggle.classList.add("alternate");
-          } else {
-            toggle.classList.remove("alternate");
-          }
-        }
-      }
-    };
-    const toggleColorMode = (alternate) => {
-      // Switch the stylesheets
-      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
-      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
-      manageTransitions('#quarto-margin-sidebar .nav-link', false);
-      if (alternate) {
-        // note: dark is layered on light, we don't disable primary!
-        enableStylesheet(alternateStylesheets);
-        for (const sheetNode of alternateStylesheets) {
-          if (sheetNode.id === "quarto-bootstrap") {
-            toggleBodyColorMode(sheetNode);
-          }
-        }
-      } else {
-        disableStylesheet(alternateStylesheets);
-        enableStylesheet(primaryStylesheets)
-        toggleBodyColorPrimary();
-      }
-      manageTransitions('#quarto-margin-sidebar .nav-link', true);
-      // Switch the toggles
-      setColorSchemeToggle(alternate)
-      // Hack to workaround the fact that safari doesn't
-      // properly recolor the scrollbar when toggling (#1455)
-      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
-        manageTransitions("body", false);
-        window.scrollTo(0, 1);
-        setTimeout(() => {
-          window.scrollTo(0, 0);
-          manageTransitions("body", true);
-        }, 40);
-      }
-    }
-    const disableStylesheet = (stylesheets) => {
-      for (let i=0; i < stylesheets.length; i++) {
-        const stylesheet = stylesheets[i];
-        stylesheet.rel = 'disabled-stylesheet';
-      }
-    }
-    const enableStylesheet = (stylesheets) => {
-      for (let i=0; i < stylesheets.length; i++) {
-        const stylesheet = stylesheets[i];
-        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
-          stylesheet.rel = 'stylesheet';
-        }
-      }
-    }
-    const manageTransitions = (selector, allowTransitions) => {
-      const els = window.document.querySelectorAll(selector);
-      for (let i=0; i < els.length; i++) {
-        const el = els[i];
-        if (allowTransitions) {
-          el.classList.remove('notransition');
-        } else {
-          el.classList.add('notransition');
-        }
-      }
-    }
-    const isFileUrl = () => {
-      return window.location.protocol === 'file:';
-    }
-    const hasAlternateSentinel = () => {
-      let styleSentinel = getColorSchemeSentinel();
-      if (styleSentinel !== null) {
-        return styleSentinel === "alternate";
-      } else {
-        return false;
-      }
-    }
-    const setStyleSentinel = (alternate) => {
-      const value = alternate ? "alternate" : "default";
-      if (!isFileUrl()) {
-        window.localStorage.setItem("quarto-color-scheme", value);
-      } else {
-        localAlternateSentinel = value;
-      }
-    }
-    const getColorSchemeSentinel = () => {
-      if (!isFileUrl()) {
-        const storageValue = window.localStorage.getItem("quarto-color-scheme");
-        return storageValue != null ? storageValue : localAlternateSentinel;
-      } else {
-        return localAlternateSentinel;
-      }
-    }
-    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
-      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
-      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
-      let newTheme = '';
-      if(authorPrefersDark) {
-        newTheme = isAlternate ? baseTheme : alternateTheme;
-      } else {
-        newTheme = isAlternate ? alternateTheme : baseTheme;
-      }
-      const changeGiscusTheme = () => {
-        // From: https://github.com/giscus/giscus/issues/336
-        const sendMessage = (message) => {
-          const iframe = document.querySelector('iframe.giscus-frame');
-          if (!iframe) return;
-          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
-        }
-        sendMessage({
-          setConfig: {
-            theme: newTheme
-          }
-        });
-      }
-      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
-      if (isGiscussLoaded) {
-        changeGiscusTheme();
-      }
-    };
-    const authorPrefersDark = false;
-    const queryPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
-    const darkModeDefault = queryPrefersDark.matches;
-      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
-      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
-    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
-    // Dark / light mode switch
-    window.quartoToggleColorScheme = () => {
-      // Read the current dark / light value
-      let toAlternate = !hasAlternateSentinel();
-      toggleColorMode(toAlternate);
-      setStyleSentinel(toAlternate);
-      toggleGiscusIfUsed(toAlternate, darkModeDefault);
-      window.dispatchEvent(new Event('resize'));
-    };
-    queryPrefersDark.addEventListener("change", e => {
-      if(window.localStorage.getItem("quarto-color-scheme") !== null)
-        return;
-      const alternate = e.matches
-      toggleColorMode(alternate);
-      localAlternateSentinel = e.matches ? 'alternate' : 'default'; // this is used alongside local storage!
-      toggleGiscusIfUsed(alternate, darkModeDefault);
-    });
-    // Switch to dark mode if need be
-    if (hasAlternateSentinel()) {
-      toggleColorMode(true);
-    } else {
-      toggleColorMode(false);
-    }
-  </script>
+<body class="nav-sidebar floating nav-fixed quarto-light">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="./index.html">
+    <a href="https://rallypoint1.com" class="navbar-brand navbar-brand-logo">
+    <img src="../assets/logo.svg" alt="" class="navbar-logo light-content">
+    <img src="../assets/logo.svg" alt="" class="navbar-logo dark-content">
+    </a>
+    <a class="navbar-brand" href="https://rallypoint1.com">
     <span class="navbar-title">GeoSurrogates.jl</span>
     </a>
   </div>
@@ -311,7 +142,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
 </div>
       </div> <!-- /container-fluid -->
     </nav>
@@ -320,7 +150,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./api.html">API</a></li><li class="breadcrumb-item"><a href="./api.html"><span class="chapter-title">API</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../pages/api.html">API</a></li><li class="breadcrumb-item"><a href="../pages/api.html"><span class="chapter-title">API</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -351,17 +181,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">GeoSurrogates.jl</span></a>
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">GeoSurrogates.jl</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./getting-started.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Getting Started</span></a>
+  <a href="../pages/getting-started.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Getting Started</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./examples.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Examples</span></a>
+  <a href="../pages/examples.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Examples</span></a>
   </div>
 </li>
       </ul>
@@ -377,7 +207,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./api.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">API</span></a>
+  <a href="../pages/api.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">API</span></a>
   </div>
 </li>
       </ul>
@@ -385,7 +215,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
- <span class="menu-text">Reference</span></a>
+ <span class="menu-text">Resources</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -393,12 +223,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./changelog.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Changelog</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./coverage.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Coverage</span></a>
+  <a href="../pages/coverage.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Coverage</span></a>
   </div>
 </li>
       </ul>
@@ -413,38 +238,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#types" id="toc-types" class="nav-link active" data-scroll-target="#types">Types</a>
-  <ul>
-  <li><a href="#additivemodel" id="toc-additivemodel" class="nav-link" data-scroll-target="#additivemodel"><code>AdditiveModel</code></a></li>
-  <li><a href="#categoricalrasterwrap" id="toc-categoricalrasterwrap" class="nav-link" data-scroll-target="#categoricalrasterwrap"><code>CategoricalRasterWrap</code></a></li>
-  <li><a href="#geomwrap" id="toc-geomwrap" class="nav-link" data-scroll-target="#geomwrap"><code>GeomWrap</code></a></li>
-  <li><a href="#idw" id="toc-idw" class="nav-link" data-scroll-target="#idw"><code>IDW</code></a></li>
-  <li><a href="#linreg" id="toc-linreg" class="nav-link" data-scroll-target="#linreg"><code>LinReg</code></a></li>
-  <li><a href="#rbf" id="toc-rbf" class="nav-link" data-scroll-target="#rbf"><code>RBF</code></a></li>
-  <li><a href="#rasterwrap" id="toc-rasterwrap" class="nav-link" data-scroll-target="#rasterwrap"><code>RasterWrap</code></a></li>
-  <li><a href="#tps" id="toc-tps" class="nav-link" data-scroll-target="#tps"><code>TPS</code></a></li>
-  </ul></li>
-  <li><a href="#functions" id="toc-functions" class="nav-link" data-scroll-target="#functions">Functions</a>
-  <ul>
-  <li><a href="#fit-fit" id="toc-fit-fit" class="nav-link" data-scroll-target="#fit-fit"><code>fit!</code> {#fit!}</a></li>
-  <li><a href="#gaussian" id="toc-gaussian" class="nav-link" data-scroll-target="#gaussian"><code>gaussian</code></a></li>
-  <li><a href="#normalize" id="toc-normalize" class="nav-link" data-scroll-target="#normalize"><code>normalize</code></a></li>
-  <li><a href="#predict" id="toc-predict" class="nav-link" data-scroll-target="#predict"><code>predict</code></a></li>
-  </ul></li>
-  <li><a href="#constants" id="toc-constants" class="nav-link" data-scroll-target="#constants">Constants</a>
-  <ul>
-  <li><a href="#catsiren" id="toc-catsiren" class="nav-link" data-scroll-target="#catsiren"><code>CatSIREN</code></a></li>
-  <li><a href="#implicitterrain" id="toc-implicitterrain" class="nav-link" data-scroll-target="#implicitterrain"><code>ImplicitTerrain</code></a></li>
-  <li><a href="#windsurrogate" id="toc-windsurrogate" class="nav-link" data-scroll-target="#windsurrogate"><code>WindSurrogate</code></a></li>
-  </ul></li>
+  <li><a href="#types" id="toc-types" class="nav-link active" data-scroll-target="#types">Types</a></li>
+  <li><a href="#functions" id="toc-functions" class="nav-link" data-scroll-target="#functions">Functions</a></li>
+  <li><a href="#constants" id="toc-constants" class="nav-link" data-scroll-target="#constants">Constants</a></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./api.html">API</a></li><li class="breadcrumb-item"><a href="./api.html"><span class="chapter-title">API</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../pages/api.html">API</a></li><li class="breadcrumb-item"><a href="../pages/api.html"><span class="chapter-title">API</span></a></li></ol></nav>
 <div class="quarto-title">
 <h1 class="title"><span class="chapter-title">API</span></h1>
 </div>
@@ -463,11 +266,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
+<div class="api-controls">
+<button type="button" class="btn btn-sm btn-outline-secondary" data-api-toggle="open">
+Open all
+</button>
+<button type="button" class="btn btn-sm btn-outline-secondary" data-api-toggle="close">
+Close all
+</button>
+</div>
 <section id="types" class="level2">
 <h2 class="anchored" data-anchor-id="types">Types</h2>
-<section id="additivemodel" class="level4">
-<h4 class="anchored"><code>AdditiveModel</code></h4>
-<div class="card mb-3">
+<details class="card mb-3 api-card">
+<summary class="card-header api-item-header">
+<h4 id="additivemodel" class="anchored">
+<code>AdditiveModel</code>
+</h4>
+</summary>
 <div class="card-body">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">AdditiveModel</span>(models<span class="op">::</span><span class="dt">Vector</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>A boosting-style composite surrogate. Each model is fitted to the residuals (target minus the sum of all previous model predictions), and the final prediction is the sum of all model predictions.</p>
@@ -478,29 +292,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model, raster)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 </div>
-</div>
-</section>
-<section id="categoricalrasterwrap" class="level4">
-<h4 class="anchored" data-anchor-id="categoricalrasterwrap"><code>CategoricalRasterWrap</code></h4>
-<div class="card mb-3">
+</details>
+<details class="card mb-3 api-card">
+<summary class="card-header api-item-header">
+<h4 id="categoricalrasterwrap" class="anchored">
+<code>CategoricalRasterWrap</code>
+</h4>
+</summary>
 <div class="card-body">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">CategoricalRasterWrap</span>(r<span class="op">::</span><span class="dt">Raster</span>; kernel)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>A GeoSurrogate for categorical rasters using kernel smoothing. Here, “categorical raster” refers to a raster where its numerical data is associated with discrete categories (e.g.&nbsp;land cover types).</p>
 </div>
-</div>
-</section>
-<section id="geomwrap" class="level4">
-<h4 class="anchored" data-anchor-id="geomwrap"><code>GeomWrap</code></h4>
-<div class="card mb-3">
+</details>
+<details class="card mb-3 api-card">
+<summary class="card-header api-item-header">
+<h4 id="geomwrap" class="anchored">
+<code>GeomWrap</code>
+</h4>
+</summary>
 <div class="card-body">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">GeomWrap</span>(geometry; kernel)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>A GeoSurrogate representing a geometry. Coordinates contained in the geometry will result in <code>predict(::GeomWrap, coords)) == 1.0</code>. Coordinates “far” will be <code>0.0</code>. “Near” coordinates are determined by the <code>kernel</code> function evaluated at the distance between the coordinate and the geometry.</p>
 </div>
-</div>
-</section>
-<section id="idw" class="level4">
-<h4 class="anchored"><code>IDW</code></h4>
-<div class="card mb-3">
+</details>
+<details class="card mb-3 api-card">
+<summary class="card-header api-item-header">
+<h4 id="idw" class="anchored">
+<code>IDW</code>
+</h4>
+</summary>
 <div class="card-body">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">IDW</span>(r<span class="op">::</span><span class="dt">Raster</span>; power<span class="op">=</span><span class="fl">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Inverse Distance Weighting surrogate. Predicts values as a weighted average of known data points, where weights are inversely proportional to the distance raised to <code>power</code>.</p>
@@ -511,11 +331,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model, raster)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 </div>
-</div>
-</section>
-<section id="linreg" class="level4">
-<h4 class="anchored" data-anchor-id="linreg"><code>LinReg</code></h4>
-<div class="card mb-3">
+</details>
+<details class="card mb-3 api-card">
+<summary class="card-header api-item-header">
+<h4 id="linreg" class="anchored">
+<code>LinReg</code>
+</h4>
+</summary>
 <div class="card-body">
 <p>No documentation found for public binding <code>GeoSurrogates.LinReg</code>.</p>
 <section id="summary" class="level1">
@@ -532,11 +354,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <pre><code>GeoSurrogates.LinReg{F&lt;:StatsModels.FormulaTerm, T&lt;:Number} &lt;: GeoSurrogates.GeoSurrogate &lt;: Any</code></pre>
 </section>
 </div>
-</div>
-</section>
-<section id="rbf" class="level4">
-<h4 class="anchored"><code>RBF</code></h4>
-<div class="card mb-3">
+</details>
+<details class="card mb-3 api-card">
+<summary class="card-header api-item-header">
+<h4 id="rbf" class="anchored">
+<code>RBF</code>
+</h4>
+</summary>
 <div class="card-body">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">RBF</span>(r<span class="op">::</span><span class="dt">Raster</span>; kernel<span class="op">=:</span>gaussian, epsilon<span class="op">=</span><span class="fl">1.0</span>, poly_degree<span class="op">=</span><span class="fl">0</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Radial Basis Function surrogate. Interpolates scattered data using a kernel applied to pairwise distances. Set <code>poly_degree=1</code> to augment with a linear polynomial term.</p>
@@ -547,20 +371,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model, (x, y))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 </div>
-</div>
-</section>
-<section id="rasterwrap" class="level4">
-<h4 class="anchored" data-anchor-id="rasterwrap"><code>RasterWrap</code></h4>
-<div class="card mb-3">
+</details>
+<details class="card mb-3 api-card">
+<summary class="card-header api-item-header">
+<h4 id="rasterwrap" class="anchored">
+<code>RasterWrap</code>
+</h4>
+</summary>
 <div class="card-body">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">RasterWrap</span>(r<span class="op">::</span><span class="dt">Raster</span>; int <span class="op">=</span> <span class="fu">BSpline</span>(<span class="fu">Linear</span>()), ext <span class="op">=</span> <span class="cn">nothing</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>A GeoSurrogate with interpolation (and optional extrapolation).</p>
 </div>
-</div>
-</section>
-<section id="tps" class="level4">
-<h4 class="anchored"><code>TPS</code></h4>
-<div class="card mb-3">
+</details>
+<details class="card mb-3 api-card">
+<summary class="card-header api-item-header">
+<h4 id="tps" class="anchored">
+<code>TPS</code>
+</h4>
+</summary>
 <div class="card-body">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">TPS</span>(r<span class="op">::</span><span class="dt">Raster</span>; regularization<span class="op">=</span><span class="fl">0.0</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Thin Plate Spline surrogate. Always includes an affine term (<code>a₀ + a₁x + a₂y</code>). Set <code>regularization &gt; 0</code> for smoothing instead of exact interpolation.</p>
@@ -570,14 +398,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model, (x, y))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 </div>
-</div>
-</section>
+</details>
 </section>
 <section id="functions" class="level2">
 <h2 class="anchored" data-anchor-id="functions">Functions</h2>
-<section id="fit-fit" class="level4">
-<h4 class="anchored" data-anchor-id="fit-fit"><code>fit!</code> {#fit!}</h4>
-<div class="card mb-3">
+<details class="card mb-3 api-card">
+<summary class="card-header api-item-header">
+<h4 id="fit!" class="anchored">
+<code>fit!</code>
+</h4>
+</summary>
 <div class="card-body">
 <p>Fit a statistical model in-place.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fit!</span>(model<span class="op">::</span><span class="dt">WindSIREN</span>, x<span class="op">::</span><span class="dt">AbstractMatrix</span>, y<span class="op">::</span><span class="dt">AbstractMatrix</span>; steps<span class="op">=</span><span class="fl">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -604,43 +434,49 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Train the model on a categorical raster. The raster values should be categorical labels (integers or any comparable type).</p>
 <p>Returns the fitted model.</p>
 </div>
-</div>
-</section>
-<section id="gaussian" class="level4">
-<h4 class="anchored" data-anchor-id="gaussian"><code>gaussian</code></h4>
-<div class="card mb-3">
+</details>
+<details class="card mb-3 api-card">
+<summary class="card-header api-item-header">
+<h4 id="gaussian" class="anchored">
+<code>gaussian</code>
+</h4>
+</summary>
 <div class="card-body">
 <p>No documentation found for public binding <code>GeoSurrogates.gaussian</code>.</p>
 <p><code>GeoSurrogates.gaussian</code> is a <code>Function</code>.</p>
 <pre><code># 1 method for generic function "gaussian" from GeoSurrogates:
  [1] gaussian(u, k)
-     @ ~/work/GeoSurrogates.jl/GeoSurrogates.jl/src/GeoSurrogates.jl:466</code></pre>
+     @ /private/tmp/claude-501/-Users-joshday--julia-dev-GeoSurrogates/4fb9df4e-bb2b-4265-a34f-035a4716cdb7/scratchpad/backfill/src/GeoSurrogates.jl:466</code></pre>
 </div>
-</div>
-</section>
-<section id="normalize" class="level4">
-<h4 class="anchored" data-anchor-id="normalize"><code>normalize</code></h4>
-<div class="card mb-3">
+</details>
+<details class="card mb-3 api-card">
+<summary class="card-header api-item-header">
+<h4 id="normalize" class="anchored">
+<code>normalize</code>
+</h4>
+</summary>
 <div class="card-body">
 <p>No documentation found for public binding <code>GeoSurrogates.normalize</code>.</p>
 <p><code>GeoSurrogates.normalize</code> is a <code>Function</code>.</p>
 <pre><code># 5 methods for generic function "normalize" from GeoSurrogates:
  [1] normalize(r::Rasters.Raster)
-     @ ~/work/GeoSurrogates.jl/GeoSurrogates.jl/src/GeoSurrogates.jl:31
+     @ /private/tmp/claude-501/-Users-joshday--julia-dev-GeoSurrogates/4fb9df4e-bb2b-4265-a34f-035a4716cdb7/scratchpad/backfill/src/GeoSurrogates.jl:31
  [2] normalize(x::AbstractArray{&lt;:Union{Missing, Number}})
-     @ ~/work/GeoSurrogates.jl/GeoSurrogates.jl/src/GeoSurrogates.jl:18
+     @ /private/tmp/claude-501/-Users-joshday--julia-dev-GeoSurrogates/4fb9df4e-bb2b-4265-a34f-035a4716cdb7/scratchpad/backfill/src/GeoSurrogates.jl:18
  [3] normalize(dim::DimensionalData.Dimensions.Dimension)
-     @ ~/work/GeoSurrogates.jl/GeoSurrogates.jl/src/GeoSurrogates.jl:29
+     @ /private/tmp/claude-501/-Users-joshday--julia-dev-GeoSurrogates/4fb9df4e-bb2b-4265-a34f-035a4716cdb7/scratchpad/backfill/src/GeoSurrogates.jl:29
  [4] normalize(nt::NamedTuple)
-     @ ~/work/GeoSurrogates.jl/GeoSurrogates.jl/src/GeoSurrogates.jl:37
+     @ /private/tmp/claude-501/-Users-joshday--julia-dev-GeoSurrogates/4fb9df4e-bb2b-4265-a34f-035a4716cdb7/scratchpad/backfill/src/GeoSurrogates.jl:37
  [5] normalize(x)
-     @ ~/work/GeoSurrogates.jl/GeoSurrogates.jl/src/GeoSurrogates.jl:27</code></pre>
+     @ /private/tmp/claude-501/-Users-joshday--julia-dev-GeoSurrogates/4fb9df4e-bb2b-4265-a34f-035a4716cdb7/scratchpad/backfill/src/GeoSurrogates.jl:27</code></pre>
 </div>
-</div>
-</section>
-<section id="predict" class="level4">
-<h4 class="anchored" data-anchor-id="predict"><code>predict</code></h4>
-<div class="card mb-3">
+</details>
+<details class="card mb-3 api-card">
+<summary class="card-header api-item-header">
+<h4 id="predict" class="anchored">
+<code>predict</code>
+</h4>
+</summary>
 <div class="card-body">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model<span class="op">::</span><span class="dt">RegressionModel</span>, [newX])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Form the predicted response of <code>model</code>. An object with new covariate values <code>newX</code> can be supplied, which should have the same type and structure as that used to fit <code>model</code>; e.g.&nbsp;for a GLM it would generally be a <code>DataFrame</code> with the same variable names as the original predictors.</p>
@@ -657,14 +493,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model<span class="op">::</span><span class="dt">CatSIREN</span>, r<span class="op">::</span><span class="dt">Raster</span>) <span class="op">-&gt;</span> Raster</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Predict class probabilities for all coordinates in a raster. Returns a Raster where each cell contains a Dict mapping class labels to probabilities.</p>
 </div>
-</div>
-</section>
+</details>
 </section>
 <section id="constants" class="level2">
 <h2 class="anchored" data-anchor-id="constants">Constants</h2>
-<section id="catsiren" class="level4">
-<h4 class="anchored" data-anchor-id="catsiren"><code>CatSIREN</code></h4>
-<div class="card mb-3">
+<details class="card mb-3 api-card">
+<summary class="card-header api-item-header">
+<h4 id="catsiren" class="anchored">
+<code>CatSIREN</code>
+</h4>
+</summary>
 <div class="card-body">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">CatSIREN</span>(n_classes; kwargs<span class="op">...</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>A SIREN (Sinusoidal Representation Network) for creating implicit neural representations of categorical raster data (e.g., Landfire fuel models). Uses periodic sine activations with a softmax output layer to ensure predictions sum to 1.</p>
@@ -702,11 +540,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Create a CatSIREN model from a categorical raster, automatically determining the number of classes from the unique values in the raster.</p>
 </section>
 </div>
-</div>
-</section>
-<section id="implicitterrain" class="level4">
-<h4 class="anchored"><code>ImplicitTerrain</code></h4>
-<div class="card mb-3">
+</details>
+<details class="card mb-3 api-card">
+<summary class="card-header api-item-header">
+<h4 id="implicitterrain" class="anchored">
+<code>ImplicitTerrain</code>
+</h4>
+</summary>
 <div class="card-body">
 <p>No docstring found for public module <code>GeoSurrogates.ImplicitTerrain</code>. Module does not have any public names.</p>
 <hr>
@@ -725,11 +565,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 </section>
 </div>
-</div>
-</section>
-<section id="windsurrogate" class="level4">
-<h4 class="anchored"><code>WindSurrogate</code></h4>
-<div class="card mb-3">
+</details>
+<details class="card mb-3 api-card">
+<summary class="card-header api-item-header">
+<h4 id="windsurrogate" class="anchored">
+<code>WindSurrogate</code>
+</h4>
+</summary>
 <div class="card-body">
 <p>No docstring found for public module <code>GeoSurrogates.WindSurrogate</code>. Module does not have any public names.</p>
 <hr>
@@ -748,28 +590,37 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 </section>
 </div>
-</div>
+</details>
+<script>
+(function() {
+    document.querySelectorAll("[data-api-toggle]").forEach(function(btn) {
+        btn.addEventListener("click", function() {
+            var open = btn.dataset.apiToggle === "open";
+            document.querySelectorAll("details.api-card").forEach(function(d) { d.open = open; });
+        });
+    });
+
+    // Browsers do not expand a closed <details> when navigating to an id inside it,
+    // so a deep link or search hit would otherwise land on a collapsed card.
+    function revealTarget() {
+        var id = decodeURIComponent(location.hash.slice(1));
+        var el = id && document.getElementById(id);
+        var card = el && el.closest("details.api-card");
+        // Expanding only adds content below the summary, so the browser's own
+        // scroll to the anchor stays correct.
+        if (card) card.open = true;
+    }
+    revealTarget();
+    window.addEventListener("hashchange", revealTarget);
+})();
+</script>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
-    // Ensure there is a toggle, if there isn't float one in the top right
-    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
-      const a = window.document.createElement('a');
-      a.classList.add('top-right');
-      a.classList.add('quarto-color-scheme-toggle');
-      a.href = "";
-      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
-      const i = window.document.createElement("i");
-      i.classList.add('bi');
-      a.appendChild(i);
-      window.document.body.appendChild(a);
-    }
-    setColorSchemeToggle(hasAlternateSentinel())
     const icon = "";
     const anchorJS = new window.AnchorJS();
     anchorJS.options = {
@@ -1170,13 +1021,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./examples.html" class="pagination-link" aria-label="Examples">
+      <a href="../pages/examples.html" class="pagination-link" aria-label="Examples">
         <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Examples</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./changelog.html" class="pagination-link" aria-label="Changelog">
-        <span class="nav-page-text"><span class="chapter-title">Changelog</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../pages/coverage.html" class="pagination-link" aria-label="Coverage">
+        <span class="nav-page-text"><span class="chapter-title">Coverage</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
@@ -1187,7 +1038,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       &nbsp;
     </div>   
     <div class="nav-footer-center">
-<p>Built on 2026-02-24</p>
+<p>Built on 2026-08-31</p>
 </div>
     <div class="nav-footer-right">
       &nbsp;
@@ -1196,22 +1047,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </footer>
 <script>
 (function() {
-    // Detect repo name and current version from URL path
-    // Deployed: /{repoName}/{version}/...
-    // Local preview: /page.html (no repo/version segments)
-    var pathParts = window.location.pathname.split('/').filter(Boolean);
-    var isLocal = pathParts.length < 2 || !pathParts[0].includes('.');
-    var currentVersion, basePath;
-
-    if (pathParts.length >= 2 && pathParts[1].match(/^(dev|stable|v\d)/)) {
-        currentVersion = pathParts[1];
-        basePath = '/' + pathParts[0] + '/';
-    } else {
-        currentVersion = 'dev';
-        basePath = '/';
+    // Injected per-version by .github/workflows/Docs.yml at deploy time.
+    // Local preview: placeholders aren't substituted; fall back to sensible defaults.
+    var CURRENT_VERSION = "v0.1.0";
+    var BASE_PATH = "/GeoSurrogates.jl/";
+    if (CURRENT_VERSION.indexOf("__") === 0) {
+        CURRENT_VERSION = "dev";
+        BASE_PATH = "/";
     }
 
-    // Build dropdown HTML
     function buildDropdown(versions) {
         var navbar = document.querySelector('.navbar-nav.navbar-nav-scroll.ms-auto');
         if (!navbar) return;
@@ -1220,25 +1064,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         li.className = 'nav-item dropdown';
         li.innerHTML =
             '<a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">' +
-                currentVersion +
+                CURRENT_VERSION +
             '</a>' +
             '<ul class="dropdown-menu dropdown-menu-end"></ul>';
 
         var menu = li.querySelector('.dropdown-menu');
 
-        // Always add dev and stable
-        var fixed = ['stable', 'dev'];
-        fixed.forEach(function(v) {
+        ['stable', 'dev'].forEach(function(v) {
             var a = document.createElement('a');
-            a.className = 'dropdown-item' + (v === currentVersion ? ' active' : '');
-            a.href = basePath + v + '/';
+            a.className = 'dropdown-item' + (v === CURRENT_VERSION ? ' active' : '');
+            a.href = BASE_PATH + v + '/';
             a.textContent = v;
             var item = document.createElement('li');
             item.appendChild(a);
             menu.appendChild(item);
         });
 
-        // Add release versions from versions.json
         if (versions && versions.length > 0) {
             var divider = document.createElement('li');
             divider.innerHTML = '<hr class="dropdown-divider">';
@@ -1246,8 +1087,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
             versions.forEach(function(v) {
                 var a = document.createElement('a');
-                a.className = 'dropdown-item' + (v === currentVersion ? ' active' : '');
-                a.href = basePath + v + '/';
+                a.className = 'dropdown-item' + (v === CURRENT_VERSION ? ' active' : '');
+                a.href = BASE_PATH + v + '/';
                 a.textContent = v;
                 var item = document.createElement('li');
                 item.appendChild(a);
@@ -1257,39 +1098,38 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
         navbar.prepend(li);
 
-        // Show outdated version banner
-        if (versions && versions.length > 0 && currentVersion !== 'stable' && currentVersion !== 'dev') {
-            var latest = versions[0]; // versions.json is sorted descending
-            if (currentVersion !== latest) {
+        if (versions && versions.length > 0 && CURRENT_VERSION !== 'stable' && CURRENT_VERSION !== 'dev') {
+            var latest = versions[0];
+            if (CURRENT_VERSION !== latest) {
                 var banner = document.createElement('div');
                 banner.className = 'alert alert-warning text-center mb-0 rounded-0';
                 banner.setAttribute('role', 'alert');
-                banner.innerHTML = 'You are viewing docs for <strong>' + currentVersion + '</strong>. ' +
-                    'The latest stable release is <a href="' + basePath + 'stable/" class="alert-link">' + latest + '</a>.';
+                banner.innerHTML = 'You are viewing docs for <strong>' + CURRENT_VERSION + '</strong>. ' +
+                    'The latest stable release is <a href="' + BASE_PATH + 'stable/" class="alert-link">' + latest + '</a>.';
                 document.body.prepend(banner);
             }
         }
     }
 
-    // Fetch versions.json, then build dropdown
-    fetch(basePath + 'versions.json')
+    fetch(BASE_PATH + 'versions.json')
         .then(function(res) { return res.ok ? res.json() : []; })
         .catch(function() { return []; })
         .then(buildDropdown);
 
-    // Fetch star count from GitHub API
+    var titleLink = document.querySelector('a.navbar-brand:not(.navbar-brand-logo)');
+    if (titleLink) {
+        titleLink.href = BASE_PATH + CURRENT_VERSION + '/';
+    }
+
     var starLink = document.querySelector('a.nav-link[href*="/stargazers"]');
     if (starLink) {
         var match = starLink.href.match(/github\.com\/([^/]+\/[^/]+)\/stargazers/);
         if (match) {
-            fetch('https://api.github.com/repos/' + match[1])
-                .then(function(res) { return res.ok ? res.json() : null; })
-                .then(function(data) {
-                    if (!data) return;
-                    var text = starLink.querySelector('.menu-text');
-                    if (text) text.textContent = data.stargazers_count;
-                })
-                .catch(function() {});
+            var img = document.createElement('img');
+            img.src = 'https://img.shields.io/github/stars/' + match[1] + '?style=social';
+            img.alt = 'GitHub stars';
+            img.style.verticalAlign = 'middle';
+            starLink.replaceChildren(img);
         }
     }
 })();
